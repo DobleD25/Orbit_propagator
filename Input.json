@@ -1,0 +1,42 @@
+{
+    "Orbits": [
+        {
+            "system": "keplerians",
+            "Keplerian_coordinates": [{
+                "a": 7264.0,
+                "e": 0.01,
+                "i": 50,
+                "Omega_AN": 50.0,
+                "omega_PER": 67.0,
+                "nu": 0.0
+            }],
+            "color": "purple",
+            "step_size": 10,
+            "time_span": 50000.0
+        }
+        
+    ],
+    
+    "Central_body": [
+        {
+            "name": "Earth",
+            "mass": 6.972e24,
+            "radius": 6378.100
+        }
+    ],
+    
+    "Perturbations": [
+        {
+            "Non_spherical_body": true,
+            "coeficients": [
+                {
+                    "J2": 1.0826e-3,
+                    "J3": -2.53e-6,
+                    "C22":  1.57e-6,
+                    "S22": -0.9e-6
+                }
+            ],
+            "EGM96_model": true
+        }
+    ]
+}
