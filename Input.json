@@ -3,16 +3,32 @@
         {
             "system": "keplerians",
             "Keplerian_coordinates": [{
-                "a": 7264.0,
+                "a": 8000.0,
                 "e": 0.01,
-                "i": 50,
+                "i": 0,
+                "Omega_AN": 50.0,
+                "omega_PER": 67.0,
+                "nu": 0.0
+            }],
+            "color": "yellow",
+            "step_size": 10,
+            "time_span": 50000.0,
+            "epoch": "2025-01-15T00:19:53"
+        },
+        {
+            "system": "keplerians",
+            "Keplerian_coordinates": [{
+                "a": 8000.0,
+                "e": 0.1,
+                "i": 55,
                 "Omega_AN": 50.0,
                 "omega_PER": 67.0,
                 "nu": 0.0
             }],
             "color": "purple",
             "step_size": 10,
-            "time_span": 50000.0
+            "time_span": 50000.0,
+            "epoch": "2025-02-03T00:19:53"
         }
         
     ],
@@ -27,8 +43,10 @@
     
     "Perturbations": [
         {
-            "Non_spherical_body": true,
-            "coeficients": [
+            "Non_spherical_body": [
+            { 
+            "value": true,
+            "coefficients": [
                 {
                     "J2": 1.0826e-3,
                     "J3": -2.53e-6,
@@ -37,6 +55,13 @@
                 }
             ],
             "EGM96_model": true
+            }],
+            "N-body": [
+            {
+            "value": true,
+            "list": ["moon", "sun"]
+            }
+            ]
         }
     ]
 }

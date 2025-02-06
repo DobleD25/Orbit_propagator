@@ -26,24 +26,6 @@ def read_egm96_coeffs(file_path):
     
     return coeffs
 
-"""
-def associated_legendre(n, x, model=None):
-    
-    Compute associated Legendre functions and their derivatives.
-    
-    Parameters:
-    - n: maximum degree
-    - x: input value (sin(el))
-    - model: model type (not used in this example)
-    
-    Returns:
-    - P: array of associated Legendre functions
-    - Pd: array of derivatives of associated Legendre functions
-
-    P, Pd = lpmn(n, n, x)
-    return P, Pd
-"""
-
 #EL MODELO EGM96 TIENE COEF NORMALIZADOS, LOS POLINOMIOS DEBEN ESTARLO TAMBIEN
 def normalize_legendre_polynomials(n, x):
     """
@@ -71,7 +53,7 @@ def normalize_legendre_polynomials(n, x):
                 normalization_factor = np.sqrt((2*n_idx+1) * math.factorial(n_idx - m_idx) / math.factorial(n_idx + m_idx))
                 
                 if m_idx > 0:
-                    print("flag")
+                    
                 # Apply normalization factor
                     normalization_factor *= np.sqrt(2)
                     
@@ -79,8 +61,27 @@ def normalize_legendre_polynomials(n, x):
 
    
     return P_normalized, P
+
+
+
 def perturbation_potential(r, coeffs, mu, body_radius, max_order):
-    
+    """
+    Calculation of the perturbed potential using Normalized Legendre Polynomials and armonical coefficients 
+    from the EGM96 model
+
+    Parameters
+    ----------
+    r : position
+    coeffs : Normalized armonical coefficientes from EGM96 model
+    mu : mu of the central body
+    body_radius : radius of the central body
+    max_order : Maximum order to have in count in the EGM96 model.
+
+    Returns
+    -------
+    U_per : perturbed potential
+
+    """
     _, az, el = coord_conversion.cartesian_to_spherical(r)
     x, y, z = r
     r_norm = np.linalg.norm(r)
@@ -100,26 +101,6 @@ def perturbation_potential(r, coeffs, mu, body_radius, max_order):
         #Normalized Legendre Polynomials
         P_norm, P= normalize_legendre_polynomials(N, np.sin(el))
         
-        """
-        for row in coeffs_filtered:
-            n, m, C, S=int(row[0]), int(row[1]), row[2], row[3]
-            if m>n:
-             continue
-            #Pnm = P[m, n]
-            Pn0 = P[n, 0]
-            if m==0:
-                U1+=(body_radius/r_norm)**n*Pn0*C #Calculation of the potential terms of the zonals (J)
-            
-            sum_u2=0 #inicialization of the summatory
-            for m_idx in range(1, n+1):
-                Pnm = P[n, m_idx]
-            
-                sum_u2+=Pnm*(C*np.cos(m_idx*az)+S*np.sin(m_idx*az)) 
-            U2+=(body_radius/r_norm)**n*sum_u2 #Calculation of the potential terms of the teserals
-         
-        U_per=(mu/r_norm)*(U1+U2)
-        """
-        
         for row in coeffs_filtered:
             n, m, C, S=int(row[0]), int(row[1]), row[2], row[3]
             sum_factor=0
@@ -132,23 +113,23 @@ def perturbation_potential(r, coeffs, mu, body_radius, max_order):
             U += (body_radius/r_norm)**n *sum_factor
             #print(f"U:{U}")
     U_per=U*(mu/r_norm)
-    #print(f"U_per:{U_per}")
     return U_per
-    #return U_per
+    
+    
+    #calculation of the gradient
 def gradient(f, r, h=1e-9):
     grad = np.zeros_like(r)
     perturbations = np.eye(len(r)) * h
     for i in range(len(r)):
         grad[i] = (f(r + perturbations[i]) - f(r - perturbations[i])) / (2 * h)
     return grad
-
 def acceleration(state, coeffs, mu, body_radius, max_order):
     r = state[:3]
     U= lambda r: perturbation_potential(r, coeffs, mu, body_radius, max_order)
     
     grad_U = gradient(U, r)
     return grad_U
-
+"""
 mu= 465332.196
 body_radius=6378.1
 max_order= 8
@@ -159,4 +140,4 @@ a_pert= acceleration(state, coeffs, mu, body_radius, max_order)
 n = 5
 x = 0.5
 P_normalized, P = normalize_legendre_polynomials(n, x)
-
+"""

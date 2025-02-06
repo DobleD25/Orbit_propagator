@@ -74,7 +74,7 @@ def setup_coes_plots(n_orbits):
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(16, 8))
     fig.suptitle('COEs', fontsize=20)
     return fig, axs
-def plot_coes(axs, time_arrays, coes_arrays, colors, labels, time_unit='seconds', save_plot=True, title='COEs', show_plot=True):
+def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, time_unit='seconds', save_plot=True, title='COEs', show_plot=True):
     """
     Plot comparison of classical orbital elements
     
@@ -88,7 +88,10 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, time_unit='seconds'
     """
     # Input validation
     assert len(coes_arrays) == len(colors) == len(labels), "Mismatched number of orbits"
-    
+    if  3600*10 <= ets_last < 3600*24*5: #Si el numero de segundos es más que un valor arbitario (10h) lo representamos como horas
+        time_unit='hours'
+    elif ets_last>= 3600*24*5: #si es mayor que 5 días lo representamos como dias.
+        time_unit= 'days'
     # Time scaling configuration
     time_factors = {
         'seconds': 1,
@@ -187,83 +190,81 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, time_unit='seconds'
     if show_plot:
         plt.show()
         
+def setup_vector_plot():   
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    return fig, axes
+# Función para graficar los vectores en un plano 2D
+def plot_vectors(vector_list, ax, i, color, vector_name, title, margin, save_plot=True):
     
-        """
-def plot_coes(ts, coes, hours= False, days=False, show_plot=True, , title= 'COEs', figsize=(16,8)):
-    print('Plotting COEs...')
-    #create figure and axes instances
-    fig, axs=plt.subplots(nrows=2, ncols=3, figsize=figsize)
-    
-    #figure tittle
-    fig.suptitle(title, fontsize=20)
-    
-    #x axis
-    if hours:
-        ts=ts/3600.0
-        xlabel='Time Elapsed (hours)'
-    elif days:
-        ts=ts/3600.0/24.0
-        xlabel='Time Elapsed (days)'
-    else: 
-        ts=ts
-        xlabel='Time Elapsed (seconds)'
-    
-    #Plot True anomaly
-    axs[0,0].plot(ts, coes[:, 5])
-    axs[0,0].set_title('True Anomaly vs. Time')
-    axs[0,0].grid(True)
-    axs[0,0].set_ylabel('Angle (degrees)')
-    axs[0, 0].set_ylim([coes[:, 5].min() - 1, coes[:, 5].max() + 1])
-    
-    #plot semi major axis
-    axs[1,0].plot(ts, coes[:, 0])
-    axs[1,0].set_title('Semi-Major Axis vs. Time')
-    axs[1,0].grid(True)
-    axs[1,0].set_ylabel('Semi-Major Axis (km)')
-    axs[1,0].set_xlabel(xlabel)
-    # Aplicar formato con 1 decimal en notación científica 
-    formatter = ScalarFormatter(useMathText=True)  # Habilita formato científico
-    formatter.set_useOffset(False)                  # Elimina el offset (ej: 1e4)
-    #formatter.set_powerlimits((4, 4))               # Fuerza notación científica para exponente 4
-    formatter.set_scientific(True)                  # Activa notación científica
-
-    # Ajustar precisión a 3 decimal (manualmente, ya que no hay set_precision)
-    formatter._format = "%3e"                      # Formato de 3 decimal
-
-    axs[1,0].yaxis.set_major_formatter(formatter)
-    
-   # Ajustar los límites del eje y para el semi-major axis
-    axs[1, 0].set_ylim([coes[:, 0].min()-1, coes[:, 0].max()+1])
+    vector_array = np.array(vector_list)
+    # Graficar los vectores (CORREGIDO)
+    x = vector_array[:, 0]  # Extrae todas las coordenadas x
+    y = vector_array[:, 1]  # Extrae todas las coordenadas y
+    ax.scatter(x[0], y[0], color='green', s=50, label='First point'if i == 0 else None) #Primer punto. Leyenda si es la primera orbita
+    ax.scatter(x[-1], y[-1], color='red', s=50, label='Last point' if i == 0 else None) #ultimo punto. Leyenda si es la primera orbita
+    ax.plot(x, y, color=color, linewidth=0.5, label=vector_name) # Un solo scatter para todos los puntos
     
 
-    #plot eccentricity
+
     
-    axs[0,1].plot(ts, coes[:, 1])
-    axs[0,1].set_title('Eccentricity vs. Time')
-    axs[0,1].grid(True)
     
-    axs[0,1].set_ylim([coes[:, 1].min() - 0.01, coes[:, 1].max() + 0.01])
+    # Personalizar el gráfico
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title(title)
+    ax.grid()
+    ax.legend()
     
-    #plot argument of periapsis    
-    axs[0,2].plot(ts, coes[:, 4  ])
-    axs[0,2].set_title('Argument of Periapsis vs. Time')
-    axs[0,2].grid(True)
-    axs[0,2].set_ylabel('Angle (degrees)')
+    min_value_x=np.min(x)
+    max_value_x=np.max(x)
+    min_value_y=np.min(y)
+    max_value_y=np.max(y)
+    ax.set_aspect('equal')  # Para que los ejes tengan la misma escala
+    ax.set_xlim([min_value_x-margin, max_value_x+margin])  # Ajustar límites si es necesario
+    ax.set_ylim([min_value_y-margin, max_value_y+margin])  # Ajustar límites si es necesario
     
-    axs[0, 2].set_ylim([coes[:, 4].min() - 0.1, coes[:, 4].max() + 0.1])
-    #Plot inclination
-    axs[1,1].plot(ts, coes[:, 2 ])
-    axs[1,1].set_title('Inclination vs. Time')
-    axs[1,1].grid(True)
-    axs[1,1].set_ylabel('Angle (degrees)')
-    axs[1,1].set_xlabel(xlabel)
-    axs[1,1].set_ylim([coes[:, 2].min() - 0.1, coes[:, 2].max() + 0.1])
-#Plot RAAN
-    axs[1,2].plot(ts, coes[:, 3  ])
-    axs[1,2].set_title('RAAN vs. Time')
-    axs[1,2].grid(True)
-    axs[1,2].set_ylabel('Angle (degrees)')
-    axs[1,2].set_xlabel(xlabel)
-    axs[1,2].set_ylim([coes[:, 3].min() - 0.1, coes[:, 3].max() + 0.1])
     
-"""
+
+    
+def plot_i_and_e_vectors(fig, axes, i_vec_all, e_vec_all, orbit_params, save_plot=True, show_plot=True, title='e-i_vectors'):
+    """Grafica los vectores i y e en subplots separados."""
+
+
+    # Valores iniciales para los límites (se calculan dentro de la función)
+    min_xi, min_xe = float('inf'), float('inf')
+    max_xi, max_xe = float('-inf'), float('-inf')
+    min_yi, min_ye = float('inf'), float('inf')
+    max_yi, max_ye = float('-inf'), float('-inf')
+
+    # Graficar los vectores i
+    for i, i_vec_orbit_list in enumerate(i_vec_all):
+        i_vec_orbit_array = np.array(i_vec_orbit_list)
+        plot_vectors(i_vec_orbit_array, axes[1], i, orbit_params['colors'][i], f'i_vec orbit {i}', title=f'Inclination vector', margin=0.01)
+        # Actualizar los límites
+        min_xi = min(min_xi, np.min(i_vec_orbit_array[:, 0]))
+        max_xi = max(max_xi, np.max(i_vec_orbit_array[:, 0]))
+        min_yi = min(min_yi, np.min(i_vec_orbit_array[:, 1]))
+        max_yi = max(max_yi, np.max(i_vec_orbit_array[:, 1]))
+
+    # Graficar los vectores e
+    for i, e_vec_orbit_list in enumerate(e_vec_all):
+        e_vec_orbit_array = np.array(e_vec_orbit_list)
+        plot_vectors(e_vec_orbit_array, axes[0], i, orbit_params['colors'][i], f'e_vec orbit {i}', title=f'Excentricity vector', margin=0.001)
+        min_xe = min(min_xe, np.min(e_vec_orbit_array[:, 0]))
+        max_xe = max(max_xe, np.max(e_vec_orbit_array[:, 0]))
+        min_ye = min(min_ye, np.min(e_vec_orbit_array[:, 1]))
+        max_ye = max(max_ye, np.max(e_vec_orbit_array[:, 1]))
+
+    # Establecer los límites del gráfico
+    margin_i = 0.01
+    margin_e = 0.001
+    axes[0].set_xlim([min_xe - margin_e, max_xe + margin_e])
+    axes[0].set_ylim([min_ye - margin_e, max_ye + margin_e])
+    axes[1].set_xlim([min_xi - margin_i, max_xi + margin_i])
+    axes[1].set_ylim([min_yi - margin_i, max_yi + margin_i])
+    
+    plt.tight_layout()
+    if save_plot:
+        plt.savefig(title+'.png', dpi=300, bbox_inches='tight')
+    if show_plot:
+        plt.show()

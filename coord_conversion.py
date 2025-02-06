@@ -25,54 +25,7 @@ def newton_iterative(M, e, tol=1e86, max_iter=100):
         EA_k = EA_k1
     raise RuntimeError("Error in the calculus of EA. Could not converge")
     
-"""
-def cart_2_kep(state_vector):
-    Cartesians to Keplerians coordinates.
-    Input: state vector (x, y, z, vx, vy, vz)
-    Output: state vector(a, e, i, Omega_AN (Longitude of the Ascending Node), omega_per (Argument of Periapsis), nu (True anomaly))
-    
 
-    
-    r_vec=state_vector[0:3] #Position vector
-    v_vec=state_vector[3:6] #velocity vector
-    #1
-    h_bar = np.cross(r_vec,v_vec)
-    h = np.linalg.norm(h_bar)
-    #2
-    r = np.linalg.norm(r_vec) #module r
-    v = np.linalg.norm(v_vec) #module v
-    #3
-    E = 0.5*(v**2) - mu/r #specific orbital energy
-    #4
-    a = -mu/(2*E) #semi-major axis
-    #5
-    e = np.sqrt(1 - (h**2)/(a*mu)) #excentricity
-    #6
-    i = np.arccos(h_bar[2]/h) #inclination 
-    #7
-    K = np.array([0, 0, 1]) #unitary Z direction vector
-    n_vec = np.cross(K, h_bar) #ascending node vector
-    n = np.linalg.norm(n_vec) #ascending node magnitude
-    # 8
-    if n_vec[1] >= 0:
-        omega_AN = np.arccos(n_vec[0] / n) #ascending node longitude
-    else:
-        omega_AN = 2 * np.pi - np.arccos(n_vec[0] / n)
-    # 9
-    e_vec = (1/mu) * ((v**2 - mu/r) * r_vec - np.dot(r_vec, v_vec) * v_vec) #excentricity vector
-    if e_vec[2] >= 0:
-        omega_PER = np.arccos(np.dot(n_vec, e_vec) / (n * e)) #periapsis argument
-    else:
-        omega_PER = 2 * np.pi - np.arccos(np.dot(n_vec, e_vec) / (n * e))
-    # 10
-    cos_nu = np.dot(e_vec, r_vec) / (e * r) #True anomaly cos
-    cos_nu = np.clip(cos_nu, -1, 1)  # clip to range -1, 1
-    if np.dot(r_vec, v_vec) >= 0:
-        nu = np.arccos(cos_nu) #true anomaly
-    else:
-        nu = 2 * np.pi - np.arccos(cos_nu)
-    return [a,e, np.rad2deg(i),np.rad2deg(omega_AN) , np.rad2deg(omega_PER), np.rad2deg(nu)]
-"""
 def cart_2_kep(state_vector, mu):
     """
     Cartesians to Keplerians coordinates.
@@ -90,10 +43,10 @@ def cart_2_kep(state_vector, mu):
     
     # Inclination
     i = np.arccos(h_bar[2] / h)
-    
+
     # Eccentricity vector
-    e = ((v_nor**2 - mu / r_nor) * r_vec - np.dot(r_vec, v_vec) * v_vec) / mu
-    e_nor = np.linalg.norm(e)
+    e_vec = ((v_nor**2 - mu / r_nor) * r_vec - np.dot(r_vec, v_vec) * v_vec) / mu
+    e_nor = np.linalg.norm(e_vec)
     
     # Node line
     N = np.cross([0, 0, 1], h_bar)
@@ -105,19 +58,21 @@ def cart_2_kep(state_vector, mu):
         raan = 2 * np.pi - raan  # Quadrant check
     
     # Argument of periapsis
-    cos_aop = np.dot(N, e) / (N_nor * e_nor)
+    cos_aop = np.dot(N, e_vec) / (N_nor * e_nor)
     cos_aop=np.clip(cos_aop, -1, 1)
     aop = np.arccos(cos_aop)
-    if e[2] < 0:
+    if e_vec[2] < 0:
         aop = 2 * np.pi - aop  # Quadrant check
     
     # True anomaly
-    ta = np.arccos(np.clip(np.dot(e, r_vec) / (e_nor * r_nor), -1.0, 1.0))
+    ta = np.arccos(np.clip(np.dot(e_vec, r_vec) / (e_nor * r_nor), -1.0, 1.0))
     if np.dot(r_vec, v_vec) < 0:
         ta = 2 * np.pi - ta  # Quadrant check
     
     # Semi-major axis
     a = r_nor * (1 + e_nor * np.cos(ta)) / (1 - e_nor**2)
+    
+    
     
     return [a, e_nor, np.rad2deg(i), np.rad2deg(raan), np.rad2deg(aop), np.rad2deg(ta)]
 def kep_2_cart(state_vector, mu):
@@ -171,6 +126,25 @@ def cartesian_to_spherical(state):
     el = np.arcsin(z / r) #latitud 
     return r, az, el
 
+def e_vector(e, raan, aop):
+    """
+    Definition of the two-dimensional eccentricity vector
+    
+    """
+    
+    e_vec=[e*np.cos(raan+aop), e*np.sin(raan+aop)]
+    
+    return e_vec
+
+def i_vector(i, raan):
+    """
+    Definition of the 2-dimensional inclination vector
+
+    """
+    i_vec=[i*np.sin(raan), -i*np.cos(raan)]
+    
+    return i_vec
+
 #Test vectors
 """
 mu=G.value*M_earth.value
@@ -178,9 +152,10 @@ r_test = np.array([2660*1000, 0*1000, 1260*1000])
 v_test = np.array([7.8*1000, 0, 0])
 state_vector=np.hstack((r_test, v_test))
 t = 0
-state_vector_klep = cart_2_kep(state_vector, mu)
-print(state_vector_klep)
-state_vector_cart = kep_2_cart(state_vector_klep)
+state_kepl = cart_2_kep(state_vector, mu)
+
+e_vec=e_vector(state_kepl[1], np.deg2rad(state_kepl[3]), np.deg2rad(state_kepl[4]))
+state_vector_cart = kep_2_cart(state_vector_klep, mu)
 print(state_vector_cart-state_vector)
 """
 
