@@ -52,17 +52,27 @@ def cart_2_kep(state_vector, mu):
     N = np.cross([0, 0, 1], h_bar)
     N_nor = np.linalg.norm(N)
     
-    # Right ascension of ascending node (RAAN)
-    raan = np.arccos(N[0] / N_nor)
-    if N[1] < 0:
-        raan = 2 * np.pi - raan  # Quadrant check
-    
-    # Argument of periapsis
-    cos_aop = np.dot(N, e_vec) / (N_nor * e_nor)
-    cos_aop=np.clip(cos_aop, -1, 1)
-    aop = np.arccos(cos_aop)
-    if e_vec[2] < 0:
-        aop = 2 * np.pi - aop  # Quadrant check
+    if N_nor == 0:  # Manejar el caso de órbita ecuatorial (N_nor = 0)
+        raan = 0.0  # valor no definido
+        aop = np.arctan2(e_vec[1], e_vec[0]) # convención (https://academia-lab.com/enciclopedia/argumento-de-periapsis/#google_vignette)
+    else:
+            # Right ascension of ascending node (RAAN)
+        cos_raan = N[0] / N_nor
+        cos_raan = np.clip(cos_raan, -1.0, 1.0)
+        raan = np.arccos(cos_raan)
+        if N[1] < 0:
+            raan = 2 * np.pi - raan #Quadrant check
+
+        # Argument of periapsis
+        cos_aop = np.dot(N, e_vec) / (N_nor * e_nor)
+
+        if e_nor == 0: # Manejar el caso de órbita circular (e_nor = 0)
+            aop = 0.0 #aop no definido
+        else:
+            cos_aop = np.clip(cos_aop, -1.0, 1.0)
+            aop = np.arccos(cos_aop)
+            if e_vec[2] < 0:
+                aop = 2 * np.pi - aop #quadrant check
     
     # True anomaly
     ta = np.arccos(np.clip(np.dot(e_vec, r_vec) / (e_nor * r_nor), -1.0, 1.0))

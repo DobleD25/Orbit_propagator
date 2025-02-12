@@ -58,3 +58,19 @@ def zvode_solver(f, states, t0, t_end, dt):
         sol.append(solver.y)
     
     return np.array(sol), np.array(t)
+
+
+def RK45_solver(f, states, t0, t_end, dt):
+    solver = ode(f)
+    solver.set_integrator('dopri5')
+    solver.set_initial_value(states[0], t0)
+    
+    t = [t0]
+    sol = [states[0]]
+    
+    while solver.successful() and solver.t < t_end:
+        solver.integrate(solver.t + dt)
+        t.append(solver.t)
+        sol.append(solver.y)
+    
+    return np.array(sol), np.array(t)

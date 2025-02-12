@@ -3,43 +3,40 @@
         {
             "system": "keplerians",
             "Keplerian_coordinates": [{
-                "a": 8000.0,
+                "a": 7000.0,
                 "e": 0.01,
-                "i": 0,
+                "i": 50,
                 "Omega_AN": 50.0,
                 "omega_PER": 67.0,
                 "nu": 0.0
             }],
             "color": "yellow",
-            "step_size": 10,
-            "time_span": 50000.0,
+            "step_size": 50,
+            "time_span": 10000.0,
             "epoch": "2025-01-15T00:19:53"
-        },
-        {
-            "system": "keplerians",
-            "Keplerian_coordinates": [{
-                "a": 8000.0,
-                "e": 0.1,
-                "i": 55,
-                "Omega_AN": 50.0,
-                "omega_PER": 67.0,
-                "nu": 0.0
-            }],
-            "color": "purple",
-            "step_size": 10,
-            "time_span": 50000.0,
-            "epoch": "2025-02-03T00:19:53"
         }
+       
         
     ],
+    
+    "Spacecraft": [{
+        "name": "Horacio",
+        "mass": 1000,
+        "area": 5,
+        "Cr": 1
+        }],
+    
+    
     
     "Central_body": [
         {
             "name": "Earth",
             "mass": 6.972e24,
-            "radius": 6378.100
+            "radius": 6378.100,
+            "eclipsing_bodies": ["Earth", "Moon"]
         }
     ],
+    
     
     "Perturbations": [
         {
@@ -61,7 +58,12 @@
             "value": true,
             "list": ["moon", "sun"]
             }
-            ]
+            ],
+            "SRP": [
+            {
+            "value": true
+            
+            }]
         }
     ]
 }

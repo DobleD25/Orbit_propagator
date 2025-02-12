@@ -7,9 +7,9 @@ Created on Mon Feb  3 13:26:59 2025
 import numpy as np
 import spice_tool as st
 import planetary_data as pd
-def n_body_a(perturbation_params, body_params, orbit_params, r):
+def n_body_a(perturbation_params, body_params, epoch, r):
     body_list=perturbation_params['N-body'][0]["list"]
-    epoch=orbit_params["epoch"]
+    #epoch=orbit_params["epoch"]
     
     r_nbodies=[]
     a_nbody = np.array([0.0, 0.0, 0.0])

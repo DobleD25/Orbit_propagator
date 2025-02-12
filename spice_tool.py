@@ -11,9 +11,8 @@ import spiceypy as spice
 def n_body(central_body, third_body, time):
 
     
-    et=spice.str2et(time)
-    state, lt = spice.spkezr(third_body, et, "J2000", "NONE", central_body)
-    
+    #et=spice.str2et(time)
+    state, lt = spice.spkezr(third_body.upper(), time, "J2000", "NONE", central_body.upper())
     return state
 
 
