@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.colors as mcolors
 from matplotlib.ticker import ScalarFormatter
+import matplotlib.dates as mdates
+import spiceypy as spice
 plt.style.use('dark_background')
 
 def setup_3d_plot():
@@ -145,7 +147,7 @@ def setup_coes_plots(n_orbits):
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(16, 8))
     fig.suptitle('COEs', fontsize=20)
     return fig, axs
-def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, df_states, eclipsing_bodies, time_unit='seconds', save_plot=True, title='COEs', show_plot=True):
+def plot_coes(axs, fig, time_arrays, coes_arrays, colors, labels, ets_last, df_states, eclipsing_bodies, datetimes, time_unit='seconds', save_plot=True, title='COEs', show_plot=True):
     """
     Plot comparison of classical orbital elements
     
@@ -157,7 +159,8 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, df_states
         labels: List of trajectory labels
         time_unit: Time unit for x-axis ('seconds', 'hours' or 'days')
     """
-    # Input validation
+    """
+    # Input validationcd ..
     assert len(coes_arrays) == len(colors) == len(labels), "Mismatched number of orbits"
     if  3600*10 <= ets_last < 3600*24*5: #Si el numero de segundos es más que un valor arbitario (10h) lo representamos como horas
         time_unit='hours'
@@ -170,17 +173,18 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, df_states
         'days': 1/(3600*24)
     }
     xlabel = f'Time ({time_unit})'
+    """
     # Initialize min and max values for each COE to set common limits later
     min_values = np.min(np.array([np.min(coes_array[:, :6], axis=0) for coes_array in coes_arrays]), axis=0)
     max_values = np.max(np.array([np.max(coes_array[:, :6], axis=0) for coes_array in coes_arrays]), axis=0)
     
     for orbit_idx, (times, coes) in enumerate(zip(time_arrays, coes_arrays)):
         # Convert time units
-        scaled_times = times * time_factors[time_unit]
+        #scaled_times = times * time_factors[time_unit]
         default_color = colors[orbit_idx]
         default_rgb = mcolors.to_rgb(default_color)
-        partial_rgb = (default_rgb[0] * 0.8, default_rgb[1] * 0.8, default_rgb[2] * 0.8)  # Factor de 0.7 para oscurecer
-        total_rgb= (default_rgb[0] * 0.4, default_rgb[1] * 0.4, default_rgb[2] * 0.4)
+        partial_rgb = (default_rgb[0] * 0.8, default_rgb[1] * 0.8, default_rgb[2] * 0.8)  
+        total_rgb= (default_rgb[0] * 0.6, default_rgb[1] * 0.6, default_rgb[2] * 0.6)
         label = labels[orbit_idx]
         formatter = ScalarFormatter(useMathText=True)  # Habilita formato científico
         formatter.set_useOffset(False)                  # Elimina el offset (ej: 1e4)
@@ -203,75 +207,62 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, df_states
             ax.set_title(title_str)
             ax.grid(True)
             ax.set_ylabel(ylabel)
-            #Formatting x-axis
-            x_formatter = ScalarFormatter(useMathText=True)
-            x_formatter.set_useOffset(False)
-            x_formatter.set_scientific(True)  # Activa notación científica
-            x_formatter._format = "%3e"  # Formato de 3 decimales
-            ax.xaxis.set_major_formatter(x_formatter)  # Asigna el formateador al eje X
+            
             # Graficar por segmentos, considerando eclipses
             start_index = 0
-            for j in range(1, len(times)):
-                # ***Lógica simplificada para detectar cambios de eclipse***
-                current_eclipse = False  # Asume que no hay eclipse al principio
-                current_partial = False
-                current_total = False
-                for ecb in eclipsing_bodies:
-                    eclipse_column = f'Eclipse_status_{ecb}'
-                    if eclipse_column in df_states.columns:
-                        if df_states.loc[j, eclipse_column] == 1:
-                            current_eclipse = True
-                            current_partial = True
-                        elif df_states.loc[j, eclipse_column] == 2:
-                            current_eclipse = True
-                            current_total = True
-                        
-
-                if j > 0:  # Asegura que haya un punto anterior para comparar
-                    previous_eclipse = False
-                    previous_partial = False
-                    previous_total = False
-                    for ecb in eclipsing_bodies:
-                        eclipse_column = f'Eclipse_status_{ecb}'
-                        if eclipse_column in df_states.columns:
-                            if df_states.loc[j - 1, eclipse_column] == 1:
-                                previous_eclipse = True
-                                previous_partial = True
-                            elif df_states.loc[j - 1, eclipse_column] == 2:
-                                previous_eclipse = True
-                                previous_total = True
-                                
-                    if current_eclipse != previous_eclipse or current_partial != previous_partial or current_total != previous_total: #If the eclipse status has changed
-                        # Grafica el segmento anterior en cuanto cambia el status del eclipse
-                        segment_color = default_color
-                        if previous_partial:
-                            segment_color = partial_rgb
-                        elif previous_total:
-                            segment_color = total_rgb
-
-                        ax.plot(scaled_times[start_index:j], coes[start_index:j, coe_index], color=segment_color)
-                        start_index = j
-
-            # Graficar el último segmento
-            partial_eclipse = False
-            total_eclipse = False
+            current_eclipse_status = {}  # Store eclipse status for each eclipsing body
+            previous_eclipse_status = {}
             for ecb in eclipsing_bodies:
                 eclipse_column = f'Eclipse_status_{ecb}'
                 if eclipse_column in df_states.columns:
-                    if (df_states.loc[start_index:, eclipse_column] == 1).any():
-                        partial_eclipse = True
-                    if (df_states.loc[start_index:, eclipse_column] == 2).any():
-                        total_eclipse = True
+                        current_eclipse_status[ecb] = df_states.loc[0, eclipse_column]
+                        previous_eclipse_status[ecb] = current_eclipse_status[ecb]
+            for j in range(1, len(times)):
+                current_eclipse_status = {} #Reset the dictionary for each step
+                
+                        
+
+                for ecb in eclipsing_bodies:
+                    eclipse_column = f'Eclipse_status_{ecb}'
+                    if eclipse_column in df_states.columns:
+                        current_eclipse_status[ecb] = df_states.loc[j, eclipse_column]
+
+                if current_eclipse_status != previous_eclipse_status:  # Any eclipse status change?
+                    segment_color = default_color
+                    partial_eclipse = any(status == 1 for status in previous_eclipse_status.values())
+                    total_eclipse = any(status == 2 for status in previous_eclipse_status.values())
+
+                    if total_eclipse:
+                        segment_color = total_rgb
+                    elif partial_eclipse:
+                        segment_color = partial_rgb
+
+                    ax.plot(datetimes[start_index:j], coes[start_index:j, coe_index], color=segment_color) #Plot with datetimes 
+                    start_index = j
+                previous_eclipse_status = current_eclipse_status.copy()
+
+            # Graficar el último segmento
+            segment_color = default_color
+            partial_eclipse = any(status == 1 for status in current_eclipse_status.values())
+            total_eclipse = any(status == 2 for status in current_eclipse_status.values())
 
             if total_eclipse:
                 segment_color = total_rgb
             elif partial_eclipse:
                 segment_color = partial_rgb
-            else:
-                segment_color = default_color
-
-            ax.plot(scaled_times[start_index:], coes[start_index:, coe_index], color=segment_color)
-                
+            ax.plot(datetimes[start_index:], coes[start_index:, coe_index], color=segment_color) #Plot with datetimes 
+            #ax.plot(scaled_times[start_index:], coes[start_index:, coe_index], color=segment_color)
+            # --- Formateo del eje X con matplotlib.dates DESPUÉS de graficar ---
+            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+            ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(ax.xaxis))
+            xlabel='UTC Time'
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))  # Formato opcional  
+            # --- Establecer límites del eje X explícitamente ---
+            start_datetime = datetimes[0]  # Tiempo inicial en datetime
+            end_datetime = datetimes[-1] # Tiempo final en datetime
+            ax.set_xlim(start_datetime, end_datetime)  # Establecer límites
+            
+    fig.autofmt_xdate() #Auto fix of the date axis.
     # Set common limits for each subplot based on min and max values across all orbits
     axs[0,0].set_ylim([min_values[5] - 5, max_values[5] + 5]) #True anomaly
     axs[1,0].set_ylim([min_values[0] - 10, max_values[0] + 10]) #Semi-major axis
@@ -296,7 +287,6 @@ def plot_coes(axs, time_arrays, coes_arrays, colors, labels, ets_last, df_states
     
     # Unified legend
     handles, labels = axs[0,0].get_legend_handles_labels()
-    fig = axs[0,0].figure
     fig.legend(handles, labels, loc='upper right', bbox_to_anchor=(0.95, 0.9))
     if save_plot:
         plt.savefig('output/'+title+'.png', dpi=300, bbox_inches='tight')
@@ -369,8 +359,8 @@ def plot_i_and_e_vectors(fig, axes, i_vec_all, e_vec_all, orbit_params, save_plo
         max_ye = max(max_ye, np.max(e_vec_orbit_array[:, 1]))
 
     # Establecer los límites del gráfico
-    margin_i = 0.01
-    margin_e = 0.001
+    margin_i = 0.001
+    margin_e = 0.0001
     axes[0].set_xlim([min_xe - margin_e, max_xe + margin_e])
     axes[0].set_ylim([min_ye - margin_e, max_ye + margin_e])
     axes[1].set_xlim([min_xi - margin_i, max_xi + margin_i])

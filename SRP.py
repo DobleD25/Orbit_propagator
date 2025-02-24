@@ -11,6 +11,7 @@ c_light=c
 import spice_tool as st
 import numpy as np
 import planetary_data as pd
+import spiceypy as spice
 #TESTING
 from astropy import units as u  
 def solar_pressure(cb):
@@ -47,14 +48,14 @@ def apparent_r(ocb, body_params, epoch, r) :
     b=np.arcsin(R_earth.value/1000/(np.linalg.norm(r_sat2ocb)))
     cos_c = np.dot(-r_sat2ocb, r_sat2sun) / (np.linalg.norm(r) * np.linalg.norm(r_sat2sun))
     c_ = np.arccos(np.clip(cos_c, -1.0, 1.0)) # Clip to [-1, 1]
-    #c=np.arccos(np.dot(-r_sat2ocb, r_sat2sun)/(np.linalg.norm(r)*np.linalg.norm(r_sat2sun)))
     
-    #x=(c_**2+a**2-b**2)/(2*c_)
-    #y=np.sqrt(a**2-x**2)
-    #Non occulted fraction
-    #A=a**2*np.arccos(x/a)+b**2*np.arccos((c-x)/b)-c*y
     
     return a, b, c_
+
+
+def F_srp(P, Cr, Area_m2, r_hat_sun):
+    F = -P * Cr * Area_m2 * r_hat_sun
+    return F
 
 
 def SRP_a(ocb, body_params, sc_params, epoch, state, nu):
@@ -78,35 +79,43 @@ def SRP_a(ocb, body_params, sc_params, epoch, state, nu):
     r_cb2sun=st.n_body(body_params["name"], "Sun", epoch)
     r_cb2sun=r_cb2sun[:3] #position vector occulting body to sun
     r=state[:3] #position vector s/c
-    r_sat2sun=r_cb2sun-r #position vector satellite to sun
+    r_sat2sun=r_cb2sun-r #position vector satellite to sun (km)
     r_sat2sun_meters = r_sat2sun*1000 * u.m #to S.I units (m)
     r_sat2sun_mnorm = np.linalg.norm(r_sat2sun_meters)
     #Solar pressure, N/m2
     P=L_sun/(4*np.pi*c*r_sat2sun_mnorm**2) #r_sat2sun from km to meter 
     a, b, c_ = apparent_r(ocb, body_params, epoch, r)
     
-    Area_m2 = sc_params["area"].value    #Área en m^2
+    Area_m2 = sc_params["area"]    #Área en m^2
     Mass_kg = sc_params["mass"] #Masa en kg
     Cr = sc_params["Cr"] #Coeficiente de reflectividad
-    if (a+b) <= c_:
-        F=-P*Cr*Area_m2 *r_sat2sun_meters/(r_sat2sun_mnorm) #solar pressure force withou occultation
-    elif np.linalg.norm(a-b)< c_< a+b: #partial ocultation 
-        F=-nu*P*Cr*Area_m2*r_sat2sun/np.linalg.norm(r_sat2sun)**3
-
-    elif c_<a-b:
-        F=-nu*P*Cr*Area_m2*r_sat2sun/np.linalg.norm(r_sat2sun)**3
-    elif c_<b-a:
-        F=0 
+    r_hat_sun = r_sat2sun_meters / r_sat2sun_mnorm
+    
+    #Inicialization of F:
+    F=np.array([0.0, 0.0, 0.0])
+    if (a + b) <= c_:
+       F = F_srp(P, Cr, Area_m2, r_hat_sun)
+    elif np.linalg.norm(a - b) < c_ < (a + b):  # ocultación parcial
+       F = -nu * F_srp(P, Cr, Area_m2, r_hat_sun)
+    elif c_ < (a - b): #ocultación total
+       F = -nu * F_srp(P, Cr, Area_m2, r_hat_sun)
+    elif c_ < (b - a): #umbra
+       F = np.array([0.0, 0.0, 0.0])
         
     else: 
         print("Error in the geometry of the eclipse")
-        
-    a_srp= F/(Mass_kg)    #acceleration of the perturbation
-    
-    return a_srp.value
+    a_srp_m = np.array([0.0, 0.0, 0.0])
+    a_srp_m= F/(Mass_kg)    #acceleration of the perturbation (m/s2)
+    a_srp_km = np.array([0.0, 0.0, 0.0])
+    a_srp_km = a_srp_m/1000 # Convertir a km/s^2
+    return a_srp_km.value
         
 #TESTING
 """
+spice.furnsh("data/naif0012.tls.pc")
+
+    # solar system ephemeris kernel
+spice.furnsh("data/de432s.bsp")
 ocb="Earth"
 body_params = {
     'name': 'Earth',
@@ -116,13 +125,14 @@ body_params = {
 
 sc_params= {
     'Cr': 1,
-    'Mass': 1000,
-    'Area': 10
+    'mass': 1000,
+    'area': 10
     }
 epoch="2025-03-20T00:00:53"
-state=[60678, 0, 0,	7.7, 0, 0]
+et = spice.str2et(epoch)
+state=[0, 9000, 0,	7.7, 0, 0]
 
-#a, b, c_, x, y=apparent_r(ocb, body_params, epoch, state[:3])
 
-P, a_srp=SRP_a(ocb, body_params, sc_params, epoch, state)
+a_srp=SRP_a(ocb, body_params, sc_params, et, state, nu=1)
+nu=1.0
 """

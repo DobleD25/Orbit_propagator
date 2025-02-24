@@ -8,7 +8,7 @@ Created on Wed Jan 15 16:21:04 2025
 from astropy.constants import G, M_earth, R_earth
 import astropy.units as u
 import numpy as np
-
+import time_conversion as tc
 
 
 
@@ -33,8 +33,10 @@ def cart_2_kep(state_vector, mu):
     Output: state vector(a, e, i, Omega_AN (Longitude of the Ascending Node), omega_per (Argument of Periapsis), nu (True anomaly))
     """
     r_vec = state_vector[0:3]   # Position vector
+    
     r_nor = np.linalg.norm(r_vec)
     v_vec = state_vector[3:6]   # Velocity vector
+    
     v_nor = np.linalg.norm(v_vec)
     
     # Specific angular momentum
@@ -46,6 +48,7 @@ def cart_2_kep(state_vector, mu):
 
     # Eccentricity vector
     e_vec = ((v_nor**2 - mu / r_nor) * r_vec - np.dot(r_vec, v_vec) * v_vec) / mu
+    
     e_nor = np.linalg.norm(e_vec)
     
     # Node line
@@ -80,8 +83,8 @@ def cart_2_kep(state_vector, mu):
         ta = 2 * np.pi - ta  # Quadrant check
     
     # Semi-major axis
-    a = r_nor * (1 + e_nor * np.cos(ta)) / (1 - e_nor**2)
-    
+    #a = r_nor * (1 + e_nor * np.cos(ta)) / (1 - e_nor**2)
+    a = mu / (2*mu/r_nor - v_nor**2)
     
     
     return [a, e_nor, np.rad2deg(i), np.rad2deg(raan), np.rad2deg(aop), np.rad2deg(ta)]
@@ -135,7 +138,11 @@ def cartesian_to_spherical(state):
     az = np.arctan2(y, x) #longitud
     el = np.arcsin(z / r) #latitud 
     return r, az, el
-
+def spherical_to_cartesian(r, theta, phi):
+    x = r * np.sin(phi) * np.cos(theta)
+    y = r * np.sin(phi) * np.sin(theta)
+    z = r * np.cos(phi)
+    return x, y, z
 def e_vector(e, raan, aop):
     """
     Definition of the two-dimensional eccentricity vector
@@ -154,6 +161,39 @@ def i_vector(i, raan):
     i_vec=[i*np.sin(raan), -i*np.cos(raan)]
     
     return i_vec
+
+
+def J2000_to_bodyfixed(state, epoch):
+    r_j2000 = state[:3] # Position in J2000 frame
+
+    # 1. Calculate Greenwich Hour Angle for the given epoch
+    gha_radians, gha_degrees = tc.spiceET2GHA(epoch)
+
+    # 2. Construct rotation matrix T to rotate from Body-Fixed to J2000
+   
+    T_BF_to_J2000 = np.array([[np.cos(gha_radians), -np.sin(gha_radians), 0],
+                               [np.sin(gha_radians), np.cos(gha_radians), 0],
+                               [0, 0, 1]])
+
+    # 3. Calculate the inverse rotation matrix T_J2000_to_BF to rotate from J2000 to Body-Fixed
+    T_J2000_to_BF = T_BF_to_J2000.T  # Transpose for inverse rotation
+
+    # 4. Transform position vector from J2000 to Body-Fixed frame
+    r_body_fixed_cartesian = np.dot(T_J2000_to_BF, r_j2000)
+    
+    return r_body_fixed_cartesian
+
+def bodyfixed_to_J200(state, epoch):
+    r_bodyfixed=state[:3]
+    # 1. Calculate Greenwich Hour Angle for the given epoch
+    gha_radians, gha_degrees = tc.spiceET2GHA(epoch)
+    T_BF_to_J2000 = np.array([[np.cos(gha_radians), -np.sin(gha_radians), 0],
+                               [np.sin(gha_radians), np.cos(gha_radians), 0],
+                               [0, 0, 1]])
+    
+    r_J2000=np.dot(T_BF_to_J2000, r_bodyfixed)
+    return r_J2000
+    
 
 #Test vectors
 """

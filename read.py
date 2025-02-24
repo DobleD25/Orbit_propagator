@@ -12,6 +12,7 @@ import astropy.constants as const
 import astropy.units as u
 import pandas as pd
 import coord_conversion as cc
+import planetary_data as pd
 def read_json(input_file):
     np.set_printoptions(precision=3, suppress=True)
     
@@ -32,9 +33,12 @@ def read_json(input_file):
         "ecb": central_body.get("eclipsing_bodies", [])
     }
     G = const.G.to(u.km**3 / (u.kg * u.s**2))
-    mu = G * body_params["mass"]
-    mu_value = mu.value
-    G = const.G.to(u.km**3 / (u.kg * u.s**2))
+    mu = getattr(pd, central_body["name"].lower())['mu']/(10**9)
+    mu_value = mu
+    #mu = G * body_params["mass"]
+    #mu_value = mu.value
+    
+    
     
     
     
@@ -78,7 +82,7 @@ def read_json(input_file):
         epoch= orbit['epoch']
         colors.append(color)
         if coord_sys_orbit == 'cartesians':
-            coords_cart = orbit['Cartesians_coordinates'][0]
+            coords_cart = orbit['Cartesian_coordinates'][0]
             x, y, z = coords_cart['x'], coords_cart['y'], coords_cart['z']
             vx, vy, vz = coords_cart['vx'], coords_cart['vy'], coords_cart['vz']
             initial_state_cart = np.array([x, y, z, vx, vy, vz])
@@ -152,6 +156,9 @@ def read_json(input_file):
             
             "eclipsing_bodies": ecb_list
         })
+    # Asegúrate de que todas las claves necesarias estén presentes
+    if 'SRP' not in perturbation_params:
+        perturbation_params['SRP'] = [{"value": False}]
     return body_params, orbit_params, perturbation_params, spacecraft_params
 
 def read_EGM96_coeffs(file_path):

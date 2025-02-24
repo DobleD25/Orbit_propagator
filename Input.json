@@ -1,28 +1,36 @@
 {
     "Orbits": [
         {
-            "system": "keplerians",
+            "system": "cartesians",
             "Keplerian_coordinates": [{
-                "a": 7000.0,
-                "e": 0.01,
-                "i": 50,
-                "Omega_AN": 50.0,
-                "omega_PER": 67.0,
-                "nu": 0.0
+                "a": 42164.9,
+                "e": 0.0002917,
+                "i": 0.0198,
+                "Omega_AN": 124.2711,
+                "omega_PER": 209.2493,
+                "nu": 22.7694
+            }],
+            "Cartesian_coordinates": [{
+                "x": 41264.2396  ,
+                "y": -8655.6642909999,
+                "z": -101.829481,
+                "vx": 0.631648,
+                "vy": 3.009276,
+                "vz": -0.001085
             }],
             "color": "yellow",
-            "step_size": 50,
-            "time_span": 10000.0,
-            "epoch": "2025-01-15T00:19:53"
+            "step_size": 500,
+            "time_span": 1728000,
+            "epoch": "2025-01-14T18:00:00"
         }
        
         
     ],
     
     "Spacecraft": [{
-        "name": "Horacio",
-        "mass": 1000,
-        "area": 5,
+        "name": "AG1",
+        "mass": 1895.546,
+        "area": 44.75,
         "Cr": 1
         }],
     
@@ -31,8 +39,8 @@
     "Central_body": [
         {
             "name": "Earth",
-            "mass": 6.972e24,
-            "radius": 6378.100,
+            "mass": 5.972e24,
+            "radius": 6378.137,
             "eclipsing_bodies": ["Earth", "Moon"]
         }
     ],

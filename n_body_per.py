@@ -9,7 +9,6 @@ import spice_tool as st
 import planetary_data as pd
 def n_body_a(perturbation_params, body_params, epoch, r):
     body_list=perturbation_params['N-body'][0]["list"]
-    #epoch=orbit_params["epoch"]
     
     r_nbodies=[]
     a_nbody = np.array([0.0, 0.0, 0.0])
@@ -28,6 +27,6 @@ def n_body_a(perturbation_params, body_params, epoch, r):
         #Vector pointing from satellite to n-body:
         r_sat2nb=r_cb2nb-r
         #Acceleration of the n-body in the sat.
-        a_nbody+=-mu_nbody * (r_sat2nb / np.linalg.norm(r_sat2nb)**3-r_cb2nb/np.linalg.norm(r_cb2nb)**3)
+        a_nbody+=mu_nbody * (r_sat2nb / np.linalg.norm(r_sat2nb)**3-r_cb2nb/np.linalg.norm(r_cb2nb)**3)
     return a_nbody
 

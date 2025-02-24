@@ -44,25 +44,28 @@ def lsoda_solver(f, states, t0, t_end, dt):
     return np.array(sol), np.array(t)
     
 
-def zvode_solver(f, states, t0, t_end, dt):
+def zvode_solver(f, states, t0, t_end, t_eval):
     solver = ode(f)
-    solver.set_integrator('vode')
+
+    solver.set_integrator('zvode') 
     solver.set_initial_value(states[0], t0)
-    
     t = [t0]
     sol = [states[0]]
     
-    while solver.successful() and solver.t < t_end:
-        solver.integrate(solver.t + dt)
-        t.append(solver.t)
-        sol.append(solver.y)
+    for t_target in t_eval[1:]: # Iterar a través de t_eval *desde el segundo elemento*
+        if solver.successful() and solver.t < t_target: # Verificar si el solver tiene éxito y el tiempo actual es menor que el tiempo objetivo
+            solver.integrate(t_target) # Integrar *hasta* el tiempo objetivo actual de t_eval
+            t.append(solver.t) # Añadir el tiempo alcanzado por el solver (debería ser muy cercano a t_target)
+            sol.append(solver.y) # Añadir el estado en el tiempo alcanzado
+        else:
+            break # Salir del bucle si el solver falla o alcanza/supera t_end
     
     return np.array(sol), np.array(t)
 
 
-def RK45_solver(f, states, t0, t_end, dt):
+def dop853_solver(f, states, t0, t_end, dt):
     solver = ode(f)
-    solver.set_integrator('dopri5')
+    solver.set_integrator('dop853')
     solver.set_initial_value(states[0], t0)
     
     t = [t0]
