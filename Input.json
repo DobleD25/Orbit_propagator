@@ -1,28 +1,49 @@
 {
-    "Orbits": [
+    "Missions": [
         {
             "system": "cartesians",
             "Keplerian_coordinates": [{
-                "a": 42164.9,
-                "e": 0.0002917,
-                "i": 0.0198,
-                "Omega_AN": 124.2711,
-                "omega_PER": 209.2493,
-                "nu": 22.7694
+                "a": 0,
+                "e": 0,
+                "i": 0,
+                "Omega_AN": 0,
+                "omega_PER": 0,
+                "nu": 0
             }],
             "Cartesian_coordinates": [{
                 "x": 41264.2396  ,
                 "y": -8655.6642909999,
-                "z": -101.829481,
+                "z": 1000.829481,
                 "vx": 0.631648,
                 "vy": 3.009276,
                 "vz": -0.001085
             }],
             "color": "yellow",
-            "step_size": 500,
-            "time_span": 1728000,
-            "epoch": "2025-01-14T18:00:00"
+            "step_size": 1000,
+            "time_span": 459200,
+            "init_epoch": "2025-01-14T18:00:00",
+            "Maneouvers": [
+                {
+                   "Chemical": [
+                      {
+                        "Epoch": "2025-01-14T22:02:30",
+                        "DeltaV (VNB)": [0,  100 , 0]
+                      }
+                      
+                      
+                    ],
+                "Electrical": [{
+                "Epoch": "2025-01-19T18:00:00",
+                "Trust and Time (TT) or Thrust and DeltaV (TD) or DeltaV and Time (DT)": "TT",
+                "Thrust(VNB)": [0, 0, 0],
+                "Time": 86400,
+                "DeltaV (VNB)": [0, 0, 0]
+            }
+                ]
+                  }
+            ]
         }
+                
        
         
     ],
@@ -74,4 +95,7 @@
             }]
         }
     ]
+    
+        
+    
 }
