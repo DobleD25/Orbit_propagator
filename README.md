@@ -19,7 +19,7 @@ This Python program is designed to simulate and propagate spacecraft orbits arou
 
 * **Orbit Propagation:**
     * Numerical integration using Runge-Kutta 4th order (RK4) and Runge-Kutta 5th/6th order (RK56) methods.
-    * Propagation in Cartesian coordinates.
+    * Propagation in J2000 Cartesian coordinates.
     * Customizable time step and total time span.
 * **Perturbation Modeling:**
     * **Non-Spherical Gravity:** Incorporates the Earth's non-spherical gravity field using the EGM96 model and supports custom J2, J3, C22, and S22 coefficients.
