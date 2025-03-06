@@ -22,7 +22,7 @@ This Python program is designed to simulate and propagate spacecraft orbits arou
     * Propagation in J2000 Cartesian coordinates.
     * Customizable time step and total time span.
 * **Perturbation Modeling:**
-    * **Non-Spherical Gravity:** Incorporates the Earth's non-spherical gravity field using the EGM96 model and supports custom J2, J3, C22, and S22 coefficients.
+    * **Non-Spherical Gravity:** Incorporates the Earth's non-spherical gravity field using the EGM96 model or custom J2, J3, C22, and S22 coefficients.
     * **N-Body Perturbations:** Accounts for gravitational influences from other celestial bodies like the Moon and the Sun.
     * **Solar Radiation Pressure (SRP):** Models the perturbation due to solar radiation pressure acting on the spacecraft.
 * **Maneuver Capabilities:**
