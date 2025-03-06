@@ -18,7 +18,7 @@ This Python program is designed to simulate and propagate spacecraft orbits arou
 
 
 * **Orbit Propagation:**
-    * Numerical integration using Runge-Kutta 4th order (RK4), Adams-Bashforth-Moulton, and Runge-Kutta 5th/6th order (RK56) methods.
+    * Numerical integration using Runge-Kutta 4th order (RK4) and Runge-Kutta 5th/6th order (RK56) methods.
     * Propagation in Cartesian coordinates.
     * Customizable time step and total time span.
 * **Perturbation Modeling:**
