@@ -90,18 +90,16 @@ After propagation, it will:
 
 CSV Files:
 
-* ephemerides_cartesians_orbit_[mission_index].csv: CSV file containing time, Cartesian position (x, y, z), velocity (vx, vy, vz), and eclipse status for each time step.
-* ephemerides_keplerians_orbit_[mission_index].csv: CSV file containing time, Keplerian elements (a, e, i, Omega_AN, omega_PER, nu), and eclipse status for each time step.
+* *ephemerides_cartesians_orbit_[mission_index].csv*: CSV file containing time, Cartesian position (x, y, z), velocity (vx, vy, vz), and eclipse status for each time step.
+* *ephemerides_keplerians_orbit_[mission_index].csv*: CSV file containing time, Keplerian elements (a, e, i, Omega_AN, omega_PER, nu), and eclipse status for each time step.
 Plot Files:
 
-* Orbit_Trajectory_2D_Orbit_[mission_index].png: 2D plot of the orbit trajectory in the XY plane.
-* Orbit_Trajectory_3D_Orbit_[mission_index].png: 3D plot of the orbit trajectory.
-* Keplerian_Elements_Evolution_Orbit_[mission_index].png: Plots showing the evolution of Semi-major axis (a), Eccentricity (e), and Inclination (i), argument of periapsis (aop), righ ascension of ascending node (raan) over time.
-* Grountrack_[mission_index].png: Plot of Latitude and Longitude in the body-fixed frame over time.
+* *Orbit_Trajectory_2D_Orbit_[mission_index].png*: 2D plot of the orbit trajectory in the XY plane.
+* *Orbit_Trajectory_3D_Orbit_[mission_index].png*: 3D plot of the orbit trajectory.
+* *Keplerian_Elements_Evolution_Orbit_[mission_index].png*: Plots showing the evolution of Semi-major axis (a), Eccentricity (e), and Inclination (i), argument of periapsis (aop), righ ascension of ascending node (raan) over time.
+* *Grountrack_[mission_index].png*: Plot of Latitude and Longitude in the body-fixed frame over time.
 
 ## Documentation
-
-[Documentation](https://linktodocumentation)
 
 The initial properties of the mission are introduced in and JSON file.
 
