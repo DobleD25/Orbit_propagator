@@ -54,7 +54,7 @@ This Python program is designed to simulate and propagate spacecraft orbits arou
 1. **Clone the Repository (or download the script files):**
    If you have access to the code repository, clone it using Git:
    ```bash
-   git clone https://github.com/DobleD17/Orbit_propagator.git
+   git clone https://github.com/DobleD25/Orbit_propagator.git
     ```
 Alternatively, download the Python script files and place them in a directory of your choice.
 
