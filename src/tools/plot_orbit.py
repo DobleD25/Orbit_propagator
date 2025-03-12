@@ -14,7 +14,6 @@ from matplotlib.ticker import ScalarFormatter
 import matplotlib.dates as mdates
 
 plt.style.use("dark_background")
-# Directory route:
 
 
 def call_plots(
@@ -118,6 +117,7 @@ def plot_3D(
     labels,
     df_states,
     eclipsing_bodies,
+    title="Orbit3D",
     save_plot=True,
 ):
     """
@@ -260,7 +260,7 @@ def plot_3D(
 
     plt.legend()
     if save_plot:
-        plt.savefig("output/" + "Orbit3D.png", dpi=300)
+        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     # plt.show()
 
 
@@ -425,7 +425,7 @@ def plot_coes(
     handles, labels = axs[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(0.95, 0.9))
     if save_plot:
-        plt.savefig("output/" + title + ".png", dpi=300, bbox_inches="tight")
+        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     if show_plot:
         plt.show()
 
@@ -511,7 +511,7 @@ def plot_i_and_e_vectors(
             axes[1],
             i,
             orbit_params["colors"][i],
-            f"i_vec orbit {i}",
+            f"i_vec mission {i}",
             title=f"Inclination vector",
             margin=0.01,
         )
@@ -529,7 +529,7 @@ def plot_i_and_e_vectors(
             axes[0],
             i,
             orbit_params["colors"][i],
-            f"e_vec orbit {i}",
+            f"e_vec mission {i}",
             title=f"Excentricity vector",
             margin=0.001,
         )
@@ -551,7 +551,7 @@ def plot_i_and_e_vectors(
 
     # save plot
     if save_plot:
-        plt.savefig("output/" + title + ".png", dpi=300, bbox_inches="tight")
+        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     # show plot
     if show_plot:
         plt.show()
@@ -618,7 +618,7 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
     if _args["grid"]:
         plt.grid(linestyle="dotted")
     if _args["filename"]:
-        plt.savefig(_args["filename"], dpi=_args["dpi"])
+        plt.savefig(os.path.join("output",  "Grountracks.png"), dpi=300, bbox_inches="tight")
     if _args["show"]:
         plt.show()
 
