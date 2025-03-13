@@ -30,6 +30,7 @@ def call_plots(
     t_eval,
     sph_bodyfixed_all,
     current_dir,
+    maneuver_datetimes
 ):
     """
     Calls functions to generate all plots.
@@ -79,6 +80,13 @@ def call_plots(
         "plot_coastlines": True,
     }
     plot_groundtracks(lat_lon, args, coastlines_coordinates_file)
+     #Plotting longitude variation
+    lon=np.rad2deg(sph_bodyfixed_all[:, :, 1])
+    lon_vel=vel_lon(lon, t_eval)
+     
+    plot_lon(lon, lon_vel, t_eval, datetimes)
+
+    
     # Plotting the COEs
 
     fig_coes, axs_coes = setup_coes_plots(len(orbit_params["initial_states"]))
@@ -93,14 +101,14 @@ def call_plots(
         df_states,
         body_params["ecb"],
         datetimes,
+        maneuver_datetimes
     )
 
     # Plotting e and i vector:
     fig, axes = setup_vector_plot()
     plot_i_and_e_vectors(fig, axes, i_vec_all, e_vec_all, orbit_params)
 
-    
-
+    plt.show()
 
 def setup_3d_plot():
     "Setup 3d Plot"
@@ -153,8 +161,8 @@ def plot_3D(
             default_rgb[0] * 0.7,
             default_rgb[1] * 0.7,
             default_rgb[2] * 0.7,
-        )  # shadow with 0.7 factor
-        total_rgb = (default_rgb[0] * 0.4, default_rgb[1] * 0.4, default_rgb[2] * 0.4)
+        )  # shadow with 0.4 factor
+        total_rgb = (default_rgb[0] * 0.3, default_rgb[1] * 0.3, default_rgb[2] * 0.3)
         # Plot by segments, considering eclipses
         start_index = 0
         for j in range(1, len(rs)):
@@ -203,6 +211,7 @@ def plot_3D(
                         rs[start_index:j, 2],
                         color=segment_color,
                         zorder=2,
+                        
                     )
                     start_index = j
 
@@ -230,6 +239,7 @@ def plot_3D(
                 rs[start_index:, 2],
                 color=segment_color,
                 zorder=2,
+                
             )
 
         ax.plot(
@@ -255,13 +265,13 @@ def plot_3D(
     ax.set_xlabel("X (km)")
     ax.set_ylabel("Y (km)")
     ax.set_zlabel("Z (km)")
-
-    ax.set_title("Orbit Propagator", zorder=3)
+    
+    ax.set_title("Orbit 3D", zorder=3)
 
     plt.legend()
     if save_plot:
         plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
-    # plt.show()
+    
 
 
 def setup_coes_plots(n_orbits):
@@ -282,13 +292,14 @@ def plot_coes(
     df_states,
     eclipsing_bodies,
     datetimes,
+    maneuver_datetimes,  # Added parameter for maneuver datetimes
     time_unit="seconds",
     save_plot=True,
     title="COEs",
     show_plot=True,
 ):
     """
-    Plot comparison of classical orbital elements
+    Plot comparison of classical orbital elements with maneuver lines.
 
     Args:
         axs: Array of matplotlib axes (2x3 grid)
@@ -296,6 +307,7 @@ def plot_coes(
         coes_arrays: List of COEs arrays for each orbit
         colors: List of plot colors
         labels: List of trajectory labels
+        maneuver_datetimes (list): List of datetime objects representing maneuver times.
         time_unit: Time unit for x-axis ('seconds', 'hours' or 'days')
     """
 
@@ -310,18 +322,16 @@ def plot_coes(
     )
 
     for orbit_idx, (times, coes) in enumerate(zip(time_arrays, coes_arrays)):
-        # Convert time units
-        # scaled_times = times * time_factors[time_unit]
         default_color = colors[orbit_idx]
         default_rgb = mcolors.to_rgb(default_color)
         partial_rgb = (default_rgb[0] * 0.8, default_rgb[1] * 0.8, default_rgb[2] * 0.8)
         total_rgb = (default_rgb[0] * 0.6, default_rgb[1] * 0.6, default_rgb[2] * 0.6)
         label = labels[orbit_idx]
-        formatter = ScalarFormatter(useMathText=True)  # Enable scientific format
-        formatter.set_useOffset(False)  # Remove the offset (e.g., 1e4)
-        formatter.set_scientific(True)  # Activate scientific notation
+        formatter = ScalarFormatter(useMathText=True)
+        formatter.set_useOffset(False)
+        formatter.set_scientific(True)
+        formatter._format = "%3e"
 
-        formatter._format = "%3e"  # Adjust precision to 3 decimal places
         for subplot_row, subplot_col, coe_index, title_str, ylabel in [
             (0, 0, 5, "True Anomaly", "Angle (degrees)"),
             (1, 0, 0, "Semi-Major Axis", "a (km)"),
@@ -330,16 +340,14 @@ def plot_coes(
             (1, 1, 2, "Inclination", "Angle (degrees)"),
             (1, 2, 3, "RAAN", "Angle (degrees)"),
         ]:
-            # Format y-axis
             ax = axs[subplot_row, subplot_col]
             ax.yaxis.set_major_formatter(formatter)
             ax.set_title(title_str)
             ax.grid(True)
             ax.set_ylabel(ylabel)
 
-            # Plot by segments, considering eclipses
             start_index = 0
-            current_eclipse_status = {}  # Store eclipse status for each eclipsing body
+            current_eclipse_status = {}
             previous_eclipse_status = {}
             for ecb in eclipsing_bodies:
                 eclipse_column = f"Eclipse_status_{ecb}"
@@ -347,23 +355,16 @@ def plot_coes(
                     current_eclipse_status[ecb] = df_states.loc[0, eclipse_column]
                     previous_eclipse_status[ecb] = current_eclipse_status[ecb]
             for j in range(1, len(times)):
-                current_eclipse_status = {}  # Reset the dictionary for each step
-
+                current_eclipse_status = {}
                 for ecb in eclipsing_bodies:
                     eclipse_column = f"Eclipse_status_{ecb}"
                     if eclipse_column in df_states.columns:
                         current_eclipse_status[ecb] = df_states.loc[j, eclipse_column]
 
-                if (
-                    current_eclipse_status != previous_eclipse_status
-                ):  # Any eclipse status change?
+                if current_eclipse_status != previous_eclipse_status:
                     segment_color = default_color
-                    partial_eclipse = any(
-                        status == 1 for status in previous_eclipse_status.values()
-                    )
-                    total_eclipse = any(
-                        status == 2 for status in previous_eclipse_status.values()
-                    )
+                    partial_eclipse = any(status == 1 for status in previous_eclipse_status.values())
+                    total_eclipse = any(status == 2 for status in previous_eclipse_status.values())
 
                     if total_eclipse:
                         segment_color = total_rgb
@@ -374,18 +375,13 @@ def plot_coes(
                         datetimes[start_index:j],
                         coes[start_index:j, coe_index],
                         color=segment_color,
-                    )  # Plot with datetimes
+                    )
                     start_index = j
                 previous_eclipse_status = current_eclipse_status.copy()
 
-            # Plot the last segment
             segment_color = default_color
-            partial_eclipse = any(
-                status == 1 for status in current_eclipse_status.values()
-            )
-            total_eclipse = any(
-                status == 2 for status in current_eclipse_status.values()
-            )
+            partial_eclipse = any(status == 1 for status in current_eclipse_status.values())
+            total_eclipse = any(status == 2 for status in current_eclipse_status.values())
 
             if total_eclipse:
                 segment_color = total_rgb
@@ -395,39 +391,48 @@ def plot_coes(
                 datetimes[start_index:],
                 coes[start_index:, coe_index],
                 color=segment_color,
-            )  # Plot with datetimes
-            # --- Format the X axis ---
+            )
+
             ax.xaxis.set_major_locator(mdates.AutoDateLocator())
             ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(ax.xaxis))
             xlabel = "UTC Time"
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
-            start_datetime = datetimes[0]  # Initial time in datetime
-            end_datetime = datetimes[-1]  # Final time in datetime
-            ax.set_xlim(start_datetime, end_datetime)  # Set limits
+            start_datetime = datetimes[0]
+            end_datetime = datetimes[-1]
+            ax.set_xlim(start_datetime, end_datetime)
 
-    fig.autofmt_xdate()  # Auto fix of the date axis.
-    # Set common limits for each subplot based on min and max values across all orbits
-    axs[0, 0].set_ylim([min_values[5] - 5, max_values[5] + 5])  # True anomaly
-    axs[1, 0].set_ylim([min_values[0] - 10, max_values[0] + 10])  # Semi-major axis
-    axs[0, 1].set_ylim([min_values[1] - 0.01, max_values[1] + 0.01])  # eccentricy
-    axs[0, 2].set_ylim([min_values[4] - 5, max_values[4] + 5])  # argument of periapsis
-    axs[1, 1].set_ylim([min_values[2] - 1, max_values[2] + 1])  # inclination
-    axs[1, 2].set_ylim([min_values[3] - 5, max_values[3] + 5])  # RAAN
+            # Add maneuver lines
+            """
+            if maneuver_datetimes:
+                for maneuver_time in maneuver_datetimes:
+                    # Normalize timezones
+                    if start_datetime.tzinfo is not None and maneuver_time.tzinfo is not None:
+                        maneuver_time = maneuver_time.astimezone(start_datetime.tzinfo)
+                    elif start_datetime.tzinfo is None and maneuver_time.tzinfo is not None:
+                        maneuver_time = maneuver_time.replace(tzinfo=None)
 
-    # Adjust layout to prevent overlapping
-    plt.tight_layout()
-    # Common formatting
-    for ax in axs.flat:
-        ax.grid(True)
-        ax.set_xlabel(xlabel)
+                    if start_datetime <= maneuver_time <= end_datetime:
+                        ax.axvline(maneuver_time, color='red', linestyle='--')
+"""
+        fig.autofmt_xdate()
+        axs[0, 0].set_ylim([min_values[5] - 5, max_values[5] + 5])
+        axs[1, 0].set_ylim([min_values[0] - 10, max_values[0] + 10])
+        axs[0, 1].set_ylim([min_values[1] - 0.01, max_values[1] + 0.01])
+        axs[0, 2].set_ylim([min_values[4] - 5, max_values[4] + 5])
+        axs[1, 1].set_ylim([min_values[2] - 1, max_values[2] + 1])
+        axs[1, 2].set_ylim([min_values[3] - 5, max_values[3] + 5])
 
-    # Unified legend
-    handles, labels = axs[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(0.95, 0.9))
-    if save_plot:
-        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
-    if show_plot:
-        plt.show()
+        plt.tight_layout()
+        for ax in axs.flat:
+            ax.grid(True)
+            ax.set_xlabel(xlabel)
+
+        handles, labels = axs[0, 0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(0.95, 0.9))
+        if save_plot:
+            plt.savefig(os.path.join("output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
+        
+            
 
 
 def setup_vector_plot():
@@ -529,7 +534,7 @@ def plot_i_and_e_vectors(
             axes[0],
             i,
             orbit_params["colors"][i],
-            f"e_vec mission {i}",
+            f"e_vec mission {i+1}",
             title=f"Excentricity vector",
             margin=0.001,
         )
@@ -553,10 +558,71 @@ def plot_i_and_e_vectors(
     if save_plot:
         plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     # show plot
-    if show_plot:
-        plt.show()
+    
+        
 
+def vel_lon(lon, t_eval):
+    
+    lon_vel = np.diff(lon, axis=1) / np.diff(t_eval)
+    
+    return lon_vel
 
+def setup_lon_plot():
+    """Sets up the figure and axes for the longitude plots."""
+    fig_lon, axes_lon = plt.subplots(2, 1, figsize=(12, 12))  # Increased figure height
+    return fig_lon, axes_lon
+def plot_lon(lon, lon_vel, t_eval, datetimes, args=None):
+    """
+    Plots the longitude and its velocity variation in two subplots.
+
+    Args:
+        lon (numpy.ndarray): Array of longitude values.
+        lon_vel (numpy.ndarray): Array of longitude velocity variation values.
+        t_eval (numpy.ndarray): Array of evaluation times.
+        args (dict, optional): Dictionary containing plot arguments. Defaults to None.
+    """
+
+    _args = {
+        "markersize": 1,
+        "labels": [""] * len(lon),
+        "colors": ["c", "r", "b", "g", "w", "y"],
+        "grid": True,
+        "show": True,
+        "filename": True,
+        "dpi": 300,
+        "legend": True,
+    }
+
+    if args:
+        _args.update(args)
+
+    fig_lon, axes_lon = setup_lon_plot()
+
+    for i in range(lon.shape[0]):
+        # Plot 1: Longitude speed variation vs. Longitude
+        axes_lon[0].plot(lon[i, 1:], lon_vel[i, :], label=f'Mission {i+1}', color=_args["colors"][i % len(_args["colors"])])
+        axes_lon[0].set_xlabel('Longitude (degrees)')
+        axes_lon[0].set_ylabel('Drift rate (degrees/s)')
+        axes_lon[0].set_title('Longitude speed variation vs. Longitude')
+
+        # Plot 2: Longitude vs. Time
+        axes_lon[1].plot(datetimes, lon[i, :], label=f'Mission {i+1}', color=_args["colors"][i % len(_args["colors"])])
+        axes_lon[1].set_xlabel('Time')
+        axes_lon[1].set_ylabel('Longitude (degrees)')
+        axes_lon[1].set_title('Longitude vs. Time')
+
+    # Common formatting
+    for ax in axes_lon:
+        if _args["legend"]:
+            ax.legend()
+        if _args["grid"]:
+            ax.grid(linestyle="dotted")
+
+    if _args["filename"]:
+        plt.savefig(os.path.join("output", "Longitude_plots.png"), dpi=300, bbox_inches="tight")
+
+    
+        
 def plot_groundtracks(coords, args, coastlines_coordinates_file):
     _args = {
         "figsize": (18, 9),
@@ -593,7 +659,7 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
     plt.plot(
         lon,
         lat,
-        "o-",
+        "o",
         color=color,
         markersize=_args["markersize"],
         label=f"Mission {i+1}",
@@ -619,7 +685,7 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
         plt.grid(linestyle="dotted")
     if _args["filename"]:
         plt.savefig(os.path.join("output",  "Grountracks.png"), dpi=300, bbox_inches="tight")
-    if _args["show"]:
-        plt.show()
+    
+        
 
 

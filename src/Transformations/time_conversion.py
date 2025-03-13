@@ -34,7 +34,8 @@ def spiceET2GHA(epoch_et_value):
         # Create an astropy Time object with Julian Date in TDB scale
         time_tdb = Time(jd_tdb, format="jd", scale="tdb")
         # Calculate Greenwich Sidereal Time (GST) using UTC time
-        gst = time_tdb.sidereal_time("apparent", "greenwich")
+        #gst = time_tdb.sidereal_time("apparent", "greenwich")
+        gst=Time.earth_rotation_angle(longitude="greenwich")
         # Get GST in radians and degrees
         gha_radians = gst.radian
         gha_degrees = gst.degree
@@ -44,7 +45,8 @@ def spiceET2GHA(epoch_et_value):
         # Create an astropy Time object with Julian Date in TDB scale
         time_tdb = Time(jd_tdb, format="jd", scale="tdb")
         # Calculate Greenwich Sidereal Time (GST) using UTC time
-        gst = time_tdb.sidereal_time("apparent", "greenwich")
+        #gst = time_tdb.sidereal_time("apparent", "greenwich")
+        gst=time_tdb.earth_rotation_angle(longitude=0)
         # Get GST in radians and degrees
         gha_radians = gst.radian
         gha_degrees = gst.degree

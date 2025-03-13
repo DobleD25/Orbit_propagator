@@ -9,7 +9,7 @@ import astropy.units as u
 import spiceypy as spice
 import pandas as pd
 import os
-
+from datetime import datetime
 
 def G_km():
     """
@@ -83,7 +83,7 @@ def save_csv(t_eval, states, eclipse_statuses, body_params, idx):
             len(df_states.columns), f"Eclipse_status_{ecb}", eclipse_statuses[:, i]
         )  # Adds a column for each eclipsing body.
     df_states.to_csv(
-        os.path.join(os.getcwd(), "output", f"State_vectors_orbit_{idx+1}.csv"),
+        os.path.join(os.getcwd(), "output", f"State_vectors_mission_{idx+1}.csv"),
         index_label="Step",
     )
     return df_states, datetimes
@@ -113,6 +113,40 @@ def save_csv_kepler(t_eval, kep_states, eclipse_statuses, body_params, idx):
             len(df_states.columns), f"Eclipse_status_{ecb}", eclipse_statuses[:, i]
         )  # Adds a column for each eclipsing body.
     df_states.to_csv(
-        os.path.join(os.getcwd(), "output", f"Kepler_State_vectors_orbit_{idx+1}.csv"),
+        os.path.join(os.getcwd(), "output", f"Kepler_State_vectors_mission_{idx+1}.csv"),
         index_label="Step",
     )
+
+
+def convert_to_datetime(date_strings, date_format='%Y-%m-%dT%H:%M:%S'):
+    """
+    Converts a list of date strings to datetime objects.
+
+    Args:
+        date_strings (list): List of date strings.
+        date_format (str): Format of the date strings.
+
+    Returns:
+        list: List of datetime objects.
+    """
+    return [datetime.strptime(date_str, date_format) for date_str in date_strings]
+
+def get_maneuver_dates(electrical_maneuvers, chemical_maneuvers):
+    """
+    Gets a list of maneuver dates from two lists of maneuvers.
+
+    Args:
+        electrical_maneuvers (list): List of electrical maneuvers.
+        chemical_maneuvers (list): List of chemical maneuvers.
+
+    Returns:
+        list: List of datetime objects representing the maneuver dates.
+    """
+    
+    electrical_dates = [maneuver[0] for maneuver in electrical_maneuvers]
+    chemical_dates = [maneuver[0] for maneuver in chemical_maneuvers]
+    
+    # Combine and sort the lists of dates
+    maneuver_dates_string = sorted(electrical_dates + chemical_dates)
+    maneuver_datetimes = convert_to_datetime(maneuver_dates_string)
+    return maneuver_datetimes

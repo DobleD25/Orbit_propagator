@@ -140,6 +140,7 @@ def kep_2_cart(state_vector, mu):
         + np.pi
         - e * (np.sqrt(1 - e**2) * np.sin(nu) / (1 + e * np.cos(nu)))
     )
+    
     # 2 Solve for eccentric anomaly (EA) using an iterative method
     EA = newton_iterative(M, e)
     # 4 Calculate the radius (r

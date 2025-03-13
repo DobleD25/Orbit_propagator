@@ -48,7 +48,7 @@ def read_json(input_file):
         "ecb": central_body.get("eclipsing_bodies", []),
     }
     G = const.G.to(u.km**3 / (u.kg * u.s**2))
-    mu = getattr(pd, central_body["name"].lower())["mu"] / (10**9)
+    mu = getattr(pd, central_body["name"].lower())["mu"] 
     mu_value = mu
     # mu = G * body_params["mass"]
     # mu_value = mu.value
@@ -164,7 +164,7 @@ def read_json(input_file):
     dt = orbits[0]["step_size"]
     tspan = orbits[0]["time_span"]
 
-    # Leer perturbaciones:
+    # Read perturbations
     perturbations = input.get("Perturbations", [{}])[0]
     Geopotential_bool = perturbations.get("Non_spherical_body", [{}])[0].get(
         "value", False
@@ -172,7 +172,7 @@ def read_json(input_file):
     N_body_bool = perturbations.get("N-body", [{}])[0].get("value", False)
     SRP_bool = perturbations.get("SRP", [{}])[0].get(
         "value", False
-    )  # Correct way to access SRP value
+    )  
 
     coefficients = perturbations["Non_spherical_body"][0].get("coefficients", [{}])[0]
     if Geopotential_bool:
@@ -187,6 +187,7 @@ def read_json(input_file):
         ecb_list = perturbations.get("Central_body", [{}])[0].get(
             "eclipsing_bodies", []
         )
+        SRP_model=perturbations.get("SRP", [{}])[0].get("Model (Cannonball/Realistic)", [])
     # dictionary of parameters:
     orbit_params = {
         "coord_sys_orbit": coord_sys_orbit,
@@ -209,6 +210,7 @@ def read_json(input_file):
     if SRP_bool:
         perturbation_params["SRP"] = perturbations["SRP"]
         perturbation_params.update({"eclipsing_bodies": ecb_list})
+        perturbation_params.update({"SRP_model": SRP_model})
     # Asegúrate de que todas las claves necesarias estén presentes
     if "SRP" not in perturbation_params:
         perturbation_params["SRP"] = [{"value": False}]

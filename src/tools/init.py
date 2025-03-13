@@ -37,7 +37,7 @@ def global_prop_init(orbit_params):
     i_vec_all = []
     e_vec_all = []
     # Labels of the different orbits
-    labels = [f"Orbit {i+1}" for i in range(len(orbit_params["initial_states"]))]
+    labels = [f"Mission {i+1}" for i in range(len(orbit_params["initial_states"]))]
     return (
         trajectories,
         states_kepl_all,

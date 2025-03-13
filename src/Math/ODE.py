@@ -179,9 +179,13 @@ def two_body_ode(
         a += a_pert
     # Solar radiation pressure (SRP)
     if perturbation_params["SRP"][0]["value"] == True:
-
-        a_pert = srp.SRP_a(body_params, spacecraft_params[0], epoch_et, state, f)
-        a += a_pert
+        if perturbation_params["SRP_model"]== "Cannonball":
+        
+            a_pert = srp.SRP_cannonball(body_params, spacecraft_params[0], epoch_et, state, f)
+            a += a_pert
+        if perturbation_params["SRP_model"]== "Realistic":
+            a_pert = srp.SRP_realistic(body_params, spacecraft_params[0], epoch_et, state, f)
+            a += a_pert
     # Chemical maneuvers
     for idx, maneuver in enumerate(man_epoch_elec_list):
         m = spacecraft_params[0]["mass"]

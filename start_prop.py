@@ -270,7 +270,8 @@ if __name__ == "__main__":
         # Save Save CSV file with ephemerides in cartesians and eclipse status
         tl.save_csv_kepler(t_eval, states_kepl, eclipse_statuses, body_params, idx)
 
-
+#List of maneuver datetimes,for plotting
+maneuver_datetimes=tl.get_maneuver_dates(man_epoch_chem_list, man_epoch_elec_list)
 # Call plotting functions.
 po.call_plots(
     datetimes,
@@ -286,6 +287,7 @@ po.call_plots(
     t_eval,
     sph_bodyfixed_all,
     current_dir,
+    maneuver_datetimes
 )
 
 
