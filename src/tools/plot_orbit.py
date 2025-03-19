@@ -49,9 +49,7 @@ def call_plots(
         t_eval (numpy.ndarray): Array of evaluation times.
     """
     # Plotting 3D orbit
-
     fig_3d, ax_3d = setup_3d_plot()
-
     plot_3D(
         ax_3d,
         trajectories,
@@ -60,53 +58,57 @@ def call_plots(
         labels,
         df_states,
         body_params["ecb"],
-    )
+        )
+    fig_3d.savefig(os.path.join("output", "Orbit3D.png"), dpi=300, bbox_inches="tight")
+
     # Plotting groundtracks:
     lat_lon = sph_bodyfixed_all[:, :, 1:3]
     coastlines_coordinates_file = os.path.join(current_dir, "Data", "coastlines.csv")
     args = {
-        "figsize": (18, 9),
-        "markersize": 1,
-        "labels": [""] * len(lat_lon),
-        "colors": ["c", "r", "b", "g", "w", "y"],
-        "grid": True,
-        "title": "Groundtracks",
-        "show": False,
-        "filename": False,
-        "dpi": 300,
-        "legend": True,
-        "surface_image": False,
-        "surface_body": "earth",
-        "plot_coastlines": True,
+    "figsize": (18, 9),
+    "markersize": 1,
+    "labels": [""] * len(lat_lon),
+    "colors": ["c", "r", "b", "g", "w", "y"],
+    "grid": True,
+    "title": "Groundtracks",
+    "show": False,
+    "filename": False,
+    "dpi": 300,
+    "legend": True,
+    "surface_image": False,
+    "surface_body": "earth",
+    "plot_coastlines": True,
     }
     plot_groundtracks(lat_lon, args, coastlines_coordinates_file)
-     #Plotting longitude variation
-    lon=np.rad2deg(sph_bodyfixed_all[:, :, 1])
-    lon_vel=vel_lon(lon, t_eval)
-     
+    plt.savefig(os.path.join("output", "Groundtracks.png"), dpi=300, bbox_inches="tight")
+
+    # Plotting longitude variation
+    lon = np.rad2deg(sph_bodyfixed_all[:, :, 1])
+    lon_vel = vel_lon(lon, t_eval)
     plot_lon(lon, lon_vel, t_eval, datetimes)
+    plt.savefig(os.path.join("output", "longitude.png"), dpi=300, bbox_inches="tight")
 
-    
-    # Plotting the COEs
-
+# Plotting the COEs
     fig_coes, axs_coes = setup_coes_plots(len(orbit_params["initial_states"]))
     plot_coes(
-        axs_coes,
-        fig_coes,
-        [ets] * len(orbit_params["initial_states"]),
-        states_kepl_all,
-        orbit_params["colors"],
-        labels,
-        t_eval[-1],
-        df_states,
-        body_params["ecb"],
-        datetimes,
-        maneuver_datetimes
+    axs_coes,
+    fig_coes,
+    [ets] * len(orbit_params["initial_states"]),
+    states_kepl_all,
+    orbit_params["colors"],
+    labels,
+    t_eval[-1],
+    df_states,
+    body_params["ecb"],
+    datetimes,
+    maneuver_datetimes
     )
+    fig_coes.savefig(os.path.join("output", "COEs.png"), dpi=300, bbox_inches="tight")
 
     # Plotting e and i vector:
-    fig, axes = setup_vector_plot()
-    plot_i_and_e_vectors(fig, axes, i_vec_all, e_vec_all, orbit_params)
+    fig_vectors, axes_vectors = setup_vector_plot()
+    plot_i_and_e_vectors(fig_vectors, axes_vectors, i_vec_all, e_vec_all, orbit_params)
+    fig_vectors.savefig(os.path.join("output", "e-i_vectors.png"), dpi=300, bbox_inches="tight")
 
     plt.show()
 
@@ -269,8 +271,8 @@ def plot_3D(
     ax.set_title("Orbit 3D", zorder=3)
 
     plt.legend()
-    if save_plot:
-        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
+    #if save_plot:
+     #   plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     
 
 
@@ -429,8 +431,8 @@ def plot_coes(
 
         handles, labels = axs[0, 0].get_legend_handles_labels()
         fig.legend(handles, labels, loc="upper right", bbox_to_anchor=(0.95, 0.9))
-        if save_plot:
-            plt.savefig(os.path.join("output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
+        #if save_plot:
+         #   plt.savefig(os.path.join("output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
         
             
 
@@ -555,8 +557,8 @@ def plot_i_and_e_vectors(
     plt.tight_layout()
 
     # save plot
-    if save_plot:
-        plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
+    #if save_plot:
+     #   plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
     # show plot
     
         
@@ -603,7 +605,7 @@ def plot_lon(lon, lon_vel, t_eval, datetimes, args=None):
         axes_lon[0].plot(lon[i, 1:], lon_vel[i, :], label=f'Mission {i+1}', color=_args["colors"][i % len(_args["colors"])])
         axes_lon[0].set_xlabel('Longitude (degrees)')
         axes_lon[0].set_ylabel('Drift rate (degrees/s)')
-        axes_lon[0].set_title('Longitude speed variation vs. Longitude')
+        axes_lon[0].set_title('Drift rate vs. Longitude')
 
         # Plot 2: Longitude vs. Time
         axes_lon[1].plot(datetimes, lon[i, :], label=f'Mission {i+1}', color=_args["colors"][i % len(_args["colors"])])
@@ -644,10 +646,7 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
 
     plt.figure(figsize=_args["figsize"])
 
-    # if _args[ 'surface_image' ]:
-    # 	plt.imshow(
-    # 		plt.imread( SURFACE_BODY_MAP[ _args[ 'surface_body' ] ] ),
-    # 		extent = [ -180, 180, -90, 90 ] )
+    
     for i in range(coords.shape[0]):  #
         lon = np.rad2deg(coords[i, :, 0])  # lon in degrees
         lat = np.rad2deg(coords[i, :, 1])  # lat in degrees
@@ -683,8 +682,8 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
 
     if _args["grid"]:
         plt.grid(linestyle="dotted")
-    if _args["filename"]:
-        plt.savefig(os.path.join("output",  "Grountracks.png"), dpi=300, bbox_inches="tight")
+    #if _args["filename"]:
+     #   plt.savefig(os.path.join("output",  "Groundtracks.png"), dpi=300, bbox_inches="tight")
     
         
 

@@ -26,11 +26,12 @@ def M_J2000toVNB_calculation(ref_state):
     # 2. Normal Unit vector (N) - Orthogonal to the orbital plane (direction of angular momentum)
     N_axis = np.cross(r_ref_J2000, v_ref_J2000)
     N_axis_unit = N_axis / np.linalg.norm(N_axis)
-
-    # 3. Binormal unit vector (B) - Completes the right-handed system (T̂ x ŴB
-    normal_axis_B = np.cross(tangential_axis_V, N_axis_unit)
-    B_axis_unit = normal_axis_B / np.linalg.norm(normal_axis_B)
-    # Build the rotation matrix. Each column is an VNB unit vector expressed in J2000 in T, N, W order.
+    # 3. Binormal unit vector (B) - Completes the right-handed system (VxN)
+    #normal_axis_B = np.cross(tangential_axis_V, N_axis_unit)
+    
+    #B_axis_unit = normal_axis_B / np.linalg.norm(normal_axis_B)
+    B_axis_unit=r_ref_J2000/np.linalg.norm(r_ref_J2000)
+    # Build the rotation matrix. Each column is an VNB unit vector expressed in J2000 in V, N, B order.
     M_J2000toVNB = np.array([V_axis_unit, N_axis_unit, B_axis_unit])
 
     return M_J2000toVNB

@@ -3,18 +3,18 @@
         {
             "system": "cartesians",
             "Keplerian_coordinates": [{
-                "a": 18000,
-                "e": 0.006422,
-                "i": 31.6353,
-                "Omega_AN": 62.55,
-                "omega_PER": 15.6574,
-                "nu": 10
+                "a": 0,
+                "e": 0,
+                "i": 0,
+                "Omega_AN": 0,
+                "omega_PER": 0,
+                "nu": 0
             }],
             "Cartesian_coordinates": [{
                 "x": 12524.756906  ,
                 "y": -40244.429508,
                 "z": -38.466131,
-                "vx": 2.936614 ,
+                "vx": 2.936614,
                 "vy": 0.915142,
                 "vz": -0.006605
             }],
@@ -26,7 +26,7 @@
                 {
                    "Chemical": [
                       {
-                        "Epoch": "2025-02-25T12:48:36",
+                        "Epoch": "2025-02-25T13:06:38",
                         "DeltaV (VNB)": [-0.0419315,  0.00080412 , -0.0006594]
                       }
                       
@@ -35,7 +35,7 @@
                 "Electrical": [{
                 "Epoch": "2025-03-08T22:16:30",
                 "Trust and Time (TT) or Thrust and DeltaV (TD) or DeltaV and Time (DT)": "DT",
-                "Thrust(VNB)": [0, 0, 0],
+                "Thrust(VNB)": [0.5, 0, 0],
                 "Time": 4848,
                 "DeltaV (VNB)": [-0.026, -0.193, -0.069]
             }
@@ -43,13 +43,16 @@
                   }
             ]
         }
-        ],
+                
+       
+        
+    ],
     
     "Spacecraft": [{
-        "name": "AG1",
-        "mass": 1895.5680602 ,
-        "area": 44.75,
-        "Cr": 1
+        "name": "AMZ5",
+        "mass":  3514.28224943,
+        "area": 142.804,
+        "Cr": 1.1589
         }],
     
     
@@ -96,4 +99,3 @@
         
     
 }
-

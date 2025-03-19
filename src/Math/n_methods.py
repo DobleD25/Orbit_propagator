@@ -116,71 +116,9 @@ def lsoda_solver(f, states, t0, t_end, dt):
     return np.array(sol), np.array(t)
 
 
-def zvode_solver(f, states, t0, t_end, t_eval):
-    """
-    Solves an ODE using the ZVODE method.
-
-    Args:
-        f: The derivative function (ODE).
-        states: The initial state vector.
-        t0: The initial time.
-        t_end: The end time.
-        t_eval: An array of time points where the solution is desired.
-
-    Returns:
-        A tuple containing the solution (array of state vectors) and the time values.
-    """
-    solver = ode(f)
-
-    solver.set_integrator("zvode")
-    solver.set_initial_value(states[0], t0)
-    t = [t0]
-    sol = [states[0]]
-
-    for t_target in t_eval[1:]:  # Iterar a través de t_eval *desde el segundo elemento*
-        if (
-            solver.successful() and solver.t < t_target
-        ):  # Verificar si el solver tiene éxito y el tiempo actual es menor que el tiempo objetivo
-            solver.integrate(
-                t_target
-            )  # Integrar *hasta* el tiempo objetivo actual de t_eval
-            t.append(
-                solver.t
-            )  # Añadir el tiempo alcanzado por el solver (debería ser muy cercano a t_target)
-            sol.append(solver.y)  # Añadir el estado en el tiempo alcanzado
-        else:
-            break  # Salir del bucle si el solver falla o alcanza/supera t_end
-
-    return np.array(sol), np.array(t)
 
 
-def dop853_solver(f, states, t0, t_end, dt):
-    """
-    Solves an ODE using the DOP853 method.
 
-    Args:
-        f: The derivative function (ODE).
-        states: The initial state vector.
-        t0: The initial time.
-        t_end: The end time.
-        dt: The time step.
-
-    Returns:
-        A tuple containing the solution (array of state vectors) and the time values.
-    """
-    solver = ode(f)
-    solver.set_integrator("dop853")
-    solver.set_initial_value(states[0], t0)
-
-    t = [t0]
-    sol = [states[0]]
-
-    while solver.successful() and solver.t < t_end:
-        solver.integrate(solver.t + dt)
-        t.append(solver.t)
-        sol.append(solver.y)
-
-    return np.array(sol), np.array(t)
 
 
 def call_rk4(
@@ -258,8 +196,8 @@ def call_rk4(
 
                 rk4_dt_to_use = dt_adjusted
 
-                # Calcular el siguiente estado *hasta* el epoch de la maniobra usando el dt ajustado
-                states[step + 1] = rk4_step(  # Calcula el estado *antes* de la maniobra
+                # Calculates the next state until the maneuver epoch
+                state_maneuver = rk4_step(  # state just before the maneuver
                     lambda t, y: ODE.two_body_ode_with_f(
                         t,
                         y,
@@ -279,38 +217,67 @@ def call_rk4(
                         spacecraft_params,
                     ),
                     (
-                        t_eval[step] if rk4_dt_to_use == default_dt else t_eval[step]
-                    ),  # Usa t_eval[step] siempre como tiempo de inicio
+                        t_eval[step] 
+                    ),
                     states[step],
-                    rk4_dt_to_use,
+                    rk4_dt_to_use
+                    
                 )
-                t_eval[step + 1] = (
-                    maneuver_epoch  # Establece el siguiente tiempo al epoch de la maniobra
-                )
+        
+                
 
-                # Aplicar la maniobra química *DESPUÉS* de que rk4_step haya propagado hasta (o cerca de) maneuver_epoch
+                # Apply maneuver in the propagated state at epoch maneuver_epoch
                 print(
                     "Applying chemical maneuver!"
-                )  # Aplica la maniobra al estado *propagado*
+                )  # 
                 dV_VNB = maneuver[2]
                 deltaV_J2000 = (
-                    deltaV.vector_J2000(states[step + 1], dV_VNB) / 1000
-                )  # Aplica ahora a states[step+1]
-                v_post_man_J2000 = states[step + 1][3:6] + deltaV_J2000
-                states[step + 1] = np.array(
-                    [  # Actualiza states[step+1] con el estado maniobrado
-                        states[step + 1][0],
-                        states[step + 1][1],
-                        states[step + 1][2],
+                    deltaV.vector_J2000(state_maneuver, dV_VNB) / 1000
+                )  
+                v_post_man_J2000 = state_maneuver[3:6] + deltaV_J2000
+                state_maneuver = np.array(
+                    [  # Update the states with the DeltaV
+                        state_maneuver[0],
+                        state_maneuver[1],
+                        state_maneuver[2],
                         v_post_man_J2000[0],
                         v_post_man_J2000[1],
                         v_post_man_J2000[2],
                     ]
                 )
+                
+                rk4_dt_2=default_dt-rk4_dt_to_use
+                states[step + 1] = rk4_step(  # state just before the maneuver
+                    lambda t, y: ODE.two_body_ode_with_f(
+                        t,
+                        y,
+                        pert,
+                        coef_pot,
+                        cb_radius.value,
+                        mu_cb,
+                        ecb_list,
+                        body_params,
+                        man_epoch_chem_list,
+                        man_epoch_elec_list,
+                        deltaV_electric_maneuvers,
+                        orbit_params,
+                        coeffs,
+                        max_order,
+                        perturbation_params,
+                        spacecraft_params,
+                    ),
+                    (
+                        maneuver_epoch
+                    ),
+                    state_maneuver,
+                    rk4_dt_2,
+                )
+                t_eval[step + 1] = t_eval[step] + default_dt
+
                 break
 
             else:
-                # Calcular el siguiente estado *después* de (posible) ajuste de dt y maniobra
+                # calculates steps without maneuver
                 states[step + 1] = rk4_step(
                     lambda t, y: ODE.two_body_ode_with_f(
                         t,
@@ -332,13 +299,13 @@ def call_rk4(
                     ),
                     (
                         t_eval[step] if rk4_dt_to_use == default_dt else maneuver_epoch
-                    ),  # Usar t_eval[step] si dt no ajustado, epoch maniobra si ajustado
+                    ),  
                     states[step],
                     rk4_dt_to_use,  # Usar dt ajustado o default_dt
                 )
                 t_eval[step + 1] = t_eval[step] + rk4_dt_to_use
 
-        # Electrical maneuvers
+        
 
         print(f"State vector: {states[step + 1]}")
         for i, ecb in enumerate(ecb_list):  # Iterate over the eclipsing bodies
@@ -450,39 +417,91 @@ def call_rk56(
                             else t_eval[step]
                         ),  # Usa t_eval[step] siempre como tiempo de inicio
                         states[step],
-                        rk4_dt_to_use,
+                        dt_to_use,
                     )
                 )
                 t_eval[step + 1] = (
                     maneuver_epoch  # Establece el siguiente tiempo al epoch de la maniobra
                 )
-
-                # Aplicar la maniobra química *DESPUÉS* de que rk4_step haya propagado hasta (o cerca de) maneuver_epoch
+                # Calculates the next state until the maneuver epoch
+                state_maneuver = rk56_step(  # state just before the maneuver
+                    lambda t, y: ODE.two_body_ode_with_f(
+                        t,
+                        y,
+                        pert,
+                        coef_pot,
+                        cb_radius.value,
+                        mu_cb,
+                        ecb_list,
+                        body_params,
+                        man_epoch_chem_list,
+                        man_epoch_elec_list,
+                        deltaV_electric_maneuvers,
+                        orbit_params,
+                        coeffs,
+                        max_order,
+                        perturbation_params,
+                        spacecraft_params,
+                    ),
+                    (
+                        t_eval[step] 
+                    ),
+                    states[step],
+                    dt_to_use
+                    
+                )
+                # Apply maneuver in the propagated state at epoch maneuver_epoch
                 print(
                     "Applying chemical maneuver!"
-                )  # Aplica la maniobra al estado *propagado*
+                )  # 
                 dV_VNB = maneuver[2]
                 deltaV_J2000 = (
-                    deltaV.vector_J2000(states[step + 1], dV_VNB) / 1000
-                )  # Aplica ahora a states[step+1]
-                print(deltaV_J2000)
-                v_post_man_J2000 = states[step + 1][3:6] + deltaV_J2000
-                print(v_post_man_J2000)
-                states[step + 1] = np.array(
-                    [  # Actualiza states[step+1] con el estado maniobrado
-                        states[step + 1][0],
-                        states[step + 1][1],
-                        states[step + 1][2],
+                    deltaV.vector_J2000(state_maneuver, dV_VNB) / 1000
+                )  
+                v_post_man_J2000 = state_maneuver[3:6] + deltaV_J2000
+                state_maneuver = np.array(
+                    [  # Update the states with the DeltaV
+                        state_maneuver[0],
+                        state_maneuver[1],
+                        state_maneuver[2],
                         v_post_man_J2000[0],
                         v_post_man_J2000[1],
                         v_post_man_J2000[2],
                     ]
                 )
-                print(states[step + 1])
+                
+                dt_2=default_dt-dt_to_use
+                states[step + 1] = rk56_step(  # state just before the maneuver
+                    lambda t, y: ODE.two_body_ode_with_f(
+                        t,
+                        y,
+                        pert,
+                        coef_pot,
+                        cb_radius.value,
+                        mu_cb,
+                        ecb_list,
+                        body_params,
+                        man_epoch_chem_list,
+                        man_epoch_elec_list,
+                        deltaV_electric_maneuvers,
+                        orbit_params,
+                        coeffs,
+                        max_order,
+                        perturbation_params,
+                        spacecraft_params,
+                    ),
+                    (
+                        maneuver_epoch
+                    ),
+                    state_maneuver,
+                    dt_2,
+                )
+                t_eval[step + 1] = t_eval[step] + default_dt
+
                 break
 
             else:
-                # Calcular el siguiente estado *después* de (posible) ajuste de dt y maniobra
+                # calculates steps without maneuver
                 states[step + 1] = rk56_step(
                     lambda t, y: ODE.two_body_ode_with_f(
                         t,
@@ -504,13 +523,13 @@ def call_rk56(
                     ),
                     (
                         t_eval[step] if dt_to_use == default_dt else maneuver_epoch
-                    ),  # Usar t_eval[step] si dt no ajustado, epoch maniobra si ajustado
+                    ),  
                     states[step],
                     dt_to_use,  # Usar dt ajustado o default_dt
                 )
                 t_eval[step + 1] = t_eval[step] + dt_to_use
 
-        # Electrical maneuvers
+        
 
         print(f"State vector: {states[step + 1]}")
         for i, ecb in enumerate(ecb_list):  # Iterate over the eclipsing bodies
@@ -518,6 +537,8 @@ def call_rk56(
                 ecb, body_params, t_eval[step], states[step]
             )  # Calculate the eclipse status
     return states, t_eval, eclipse_statuses
+
+
 
 """
 def call_adamsBM(
