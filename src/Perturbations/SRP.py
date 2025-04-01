@@ -11,7 +11,6 @@ c_light = c
 import spice_tool as st
 import numpy as np
 import coord_conversion as cc
-# TESTING
 from astropy import units as u
 
 
@@ -94,7 +93,7 @@ def SRP_cannonball(body_params, sc_params, epoch, state, f):
 
     Area_m2 = sc_params["area"]  # Área en m^2
     Mass_kg = sc_params["mass"]  # Masa en kg
-    Cr = sc_params["Cr"]  # Coeficiente de reflectividad
+    Cr = sc_params["Cr"]  # Reflectivity coefficient
     r_hat_sun = r_sat2sun_meters / r_sat2sun_mnorm
 
     # Initialization of F:
@@ -105,8 +104,7 @@ def SRP_cannonball(body_params, sc_params, epoch, state, f):
     a_srp_m = np.array([0.0, 0.0, 0.0])
     a_srp_m = F / (Mass_kg)  # acceleration of the perturbation (m/s2)
     a_srp_km = np.array([0.0, 0.0, 0.0])
-    a_srp_km = a_srp_m / 1000  # Convertir a km/s^2
-    return a_srp_km.value
+    a_srp_km = a_srp_m / 1000  # m/s2 to km/s
 
 
 def SRP_realistic(body_params, sc_params, epoch, state, f):

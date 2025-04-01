@@ -20,7 +20,7 @@ def n_body(central_body, n_body, time):
     Returns:
         numpy.ndarray: State vector (position and velocity) of the n body relative to the central body.
     """
-    # et=spice.str2et(time)
+    
     state, lt = spice.spkezr(
         n_body.upper(), time, "J2000", "NONE", central_body.upper()
     )

@@ -74,7 +74,7 @@ def orbit_prop_init(idx, initial_state, orbit_params):
     steps = int(orbit_params["tspan"] / orbit_params["dt"])
     states = np.zeros(
         (steps, 6), dtype=np.float64
-    )  # Inicializamos states con formato float64
+    )  # Init states
     states[0] = initial_state
 
     r_sph_bodyfixed = []
@@ -88,11 +88,11 @@ def orbit_prop_init(idx, initial_state, orbit_params):
                    \n"""
     )
     start_time = time.time()  # Execution time start
-    # Definición de maniobras:
+    # Maneuver definitions
     man_epoch_chem_list = orbit_params["man_epoch_chem_lists"][idx]
     man_epoch_elec_list = orbit_params["man_epoch_elec_lists"][idx]
 
-    # Inicialization of i_vec y e_vec para la orbita:
+    # Inicialization of i_vec y e_vec:
     i_vec_orbit = []
     e_vec_orbit = []
     return (

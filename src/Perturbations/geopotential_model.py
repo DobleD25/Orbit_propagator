@@ -65,7 +65,7 @@ def egm96_model_bool(perturbation_params):
         return None, None  # coeffs, max_order nulos
 
 
-# EL MODELO EGM96 TIENE COEF NORMALIZADOS, LOS POLINOMIOS DEBEN ESTARLO TAMBIEN
+
 def normalize_legendre_polynomials(n, x):
     """
     Normalize the associated Legendre polynomials (Pnm) for use with normalized coefficients.

@@ -24,7 +24,7 @@ def n_body_a(perturbation_params, body_params, epoch, r):
     """
     body_list = perturbation_params["N-body"][0]["list"]
 
-    r_nbodies = []
+    
     a_nbody = np.array([0.0, 0.0, 0.0])
     for nbody in body_list:
 

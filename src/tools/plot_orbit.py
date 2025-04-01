@@ -271,8 +271,7 @@ def plot_3D(
     ax.set_title("Orbit 3D", zorder=3)
 
     plt.legend()
-    #if save_plot:
-     #   plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
+    
     
 
 
@@ -556,10 +555,7 @@ def plot_i_and_e_vectors(
 
     plt.tight_layout()
 
-    # save plot
-    #if save_plot:
-     #   plt.savefig(os.path.join( "output", f"{title}" + ".png"), dpi=300, bbox_inches="tight")
-    # show plot
+
     
         
 
@@ -682,8 +678,7 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
 
     if _args["grid"]:
         plt.grid(linestyle="dotted")
-    #if _args["filename"]:
-     #   plt.savefig(os.path.join("output",  "Groundtracks.png"), dpi=300, bbox_inches="tight")
+
     
         
 

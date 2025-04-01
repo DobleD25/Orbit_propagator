@@ -129,7 +129,7 @@ def calculate_nu(state, ecb_list, body_params, epoch_et):
     float:
         The calculated shadow function f.
     """
-    f = None  # Inicializa nu
+    f = None  # Inicialize the shadow function
 
     for i, ecb in enumerate(ecb_list):
         _, f = eclipse(

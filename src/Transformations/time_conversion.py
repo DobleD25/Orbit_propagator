@@ -51,12 +51,6 @@ def spiceET2GHA(epoch_et_value):
         gha_radians = gst.radian
         gha_degrees = gst.degree
 
-    # Convert the TDB time to UTC to calculate Greenwich sidereal time.
-    # Although sidereal time is strictly defined with UT1, for many applications
-    # the difference between UTC and UT1 is small, and using UTC to get GST is common.
-    # If maximum accuracy is required, UT1 should be used and the TDB-UT1 difference should be considered.
-    # time_utc = (
-    #    time_tdb.utc
-    # )  # Convert to UTC for GST calculation (common simplification)
+    
 
     return gha_radians, gha_degrees

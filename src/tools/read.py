@@ -28,19 +28,19 @@ def read_json(input_file):
     """
     np.set_printoptions(precision=3, suppress=True)
 
-    # Leer archivo de entrada:
+    # Read input file:
     with open(input_file, "r") as file:
         input = json.load(file)
 
-    # Leer parámetros de las órbitas:
+    # Read parameters of each mission
     orbits = input["Missions"]
     initial_states = []
     colors = []
     maneuver_params_lists = []
-    # Parámetros del cuerpo central:
+    #  Central body parameters
     central_body = input["Central_body"][
         0
-    ]  # Asumiendo que Central_body es una lista con un diccionario
+    ]  
     body_params = {
         "name": central_body["name"],
         "radius": central_body["radius"] * u.km,
@@ -50,8 +50,7 @@ def read_json(input_file):
     G = const.G.to(u.km**3 / (u.kg * u.s**2))
     mu = getattr(pd, central_body["name"].lower())["mu"] 
     mu_value = mu
-    # mu = G * body_params["mass"]
-    # mu_value = mu.value
+    
 
     # Print central body parameters
     print(
@@ -196,7 +195,7 @@ def read_json(input_file):
         "tspan": tspan,
         "colors": colors,
         "epoch": init_epoch,
-        "maneuver_params_list": maneuver_params_lists,  # lista de maniobras a orbit_params
+        "maneuver_params_list": maneuver_params_lists,  
     }
     perturbation_params = {"perturbations": perturbations}
     if Geopotential_bool:
@@ -211,7 +210,6 @@ def read_json(input_file):
         perturbation_params["SRP"] = perturbations["SRP"]
         perturbation_params.update({"eclipsing_bodies": ecb_list})
         perturbation_params.update({"SRP_model": SRP_model})
-    # Asegúrate de que todas las claves necesarias estén presentes
     if "SRP" not in perturbation_params:
         perturbation_params["SRP"] = [{"value": False}]
 
@@ -247,16 +245,16 @@ def read_maneuvers(orbit_params):
     Returns:
     dict: Updated orbit parameters with processed maneuver epochs.
     """
-    # Lista de epoch de maniobras en ET SPICE
+    # Init maneuver lists
     man_epoch_chem_lists = []
     man_epoch_elec_lists = []
 
     for maneuver_list in orbit_params[
         "maneuver_params_list"
-    ]:  # Iterar sobre las listas de maniobras de cada órbita
+    ]:  # Iterate about the lists for each mission
         man_epoch_chem_list = []
         man_epoch_elec_list = []
-        for maneuver in maneuver_list:  # Iterar sobre las maniobras individuales
+        for maneuver in maneuver_list:  # Iterate about each maneuvers list
             if maneuver["type"] == "Chemical":
                 man_epoch_et = spice.str2et(maneuver["epoch"])
                 delta_v = maneuver["delta_v"]
@@ -282,13 +280,13 @@ def read_maneuvers(orbit_params):
     orbit_params["man_epoch_chem_lists"] = man_epoch_chem_lists
     orbit_params["man_epoch_elec_lists"] = man_epoch_elec_lists
 
-    # Imprimir maniobras químicas
+    # Print chemical maneuvers
     for i, maneuver in enumerate(man_epoch_chem_list):
         print(
             f"Chemical maneuver {i+1}: epoch UT: {maneuver[0]}; Delta V: {maneuver[2]}"
         )
 
-    # Imprimir maniobras eléctricas
+    # Print electric maneuvers
     for i, maneuver in enumerate(man_epoch_elec_list):
         print(f"Electrical maneuver {i+1}: epoch UT: {maneuver[0]};")
     return orbit_params
