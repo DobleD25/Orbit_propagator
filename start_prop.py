@@ -183,7 +183,7 @@ def solve_orbit(
     else:
         print("Incorrect value")
 
-    return states, t_eval, eclipse_statuses
+    return states, t_eval, eclipse_statuses, ecb_list
 
 
 if __name__ == "__main__":
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         ) = init.orbit_prop_init(idx, initial_state, orbit_params)
 
         # Propagation of the orbit
-        states, t_eval, eclipse_statuses = solve_orbit(
+        states, t_eval, eclipse_statuses, ecb_list = solve_orbit(
             method,
             steps,
             ets,
@@ -287,7 +287,8 @@ po.call_plots(
     t_eval,
     sph_bodyfixed_all,
     current_dir,
-    maneuver_datetimes
+    maneuver_datetimes,
+    ecb_list
 )
 
 

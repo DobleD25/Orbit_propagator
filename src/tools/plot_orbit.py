@@ -30,7 +30,8 @@ def call_plots(
     t_eval,
     sph_bodyfixed_all,
     current_dir,
-    maneuver_datetimes
+    maneuver_datetimes,
+    ecb_list
 ):
     """
     Calls functions to generate all plots.
@@ -48,6 +49,7 @@ def call_plots(
         ets (numpy.ndarray): Array of ephemeris times relatives to the initial epoch.
         t_eval (numpy.ndarray): Array of evaluation times.
     """
+    plt.close()#Closing previus plottings
     # Plotting 3D orbit
     fig_3d, ax_3d = setup_3d_plot()
     plot_3D(
@@ -109,7 +111,12 @@ def call_plots(
     fig_vectors, axes_vectors = setup_vector_plot()
     plot_i_and_e_vectors(fig_vectors, axes_vectors, i_vec_all, e_vec_all, orbit_params)
     fig_vectors.savefig(os.path.join("output", "e-i_vectors.png"), dpi=300, bbox_inches="tight")
-
+    
+    #Plot eclipses
+    eclipse_array=eclipse_array = df_states.iloc[:, 8:].values
+    max_vector = np.max(eclipse_array, axis=1) #Vector with fused eclipse status for any eclipsing body
+    plot_eclipse_array(datetimes, max_vector, args )
+    #eclipse_array=
     plt.show()
 
 def setup_3d_plot():
@@ -681,5 +688,55 @@ def plot_groundtracks(coords, args, coastlines_coordinates_file):
 
     
         
+def plot_eclipse_array( datetimes, arr, args ):
+	_args = {
+		'figsize'          : ( 16, 8 ),
+		'labels'           : [ '' ],
+        'xlabel'           : 'Time (UTC)',
+		'time_unit'        : 'seconds',
+		'color'            : 'm',
+		'lw'               : 2,
+		'labelsize'        : 15,
+		'legend_fontsize'  : 20,
+		'legend_framealpha': 0.3,
+		'title'            : 'Eclipse Array',
+		'xlim'             : None,
+		'legend'           : True,
+		'show'             : False,
+		'filename'         : False,
+		'dpi'              : 300,
+	}
+	for key in args.keys():
+		_args[ key ] = args[ key ]
 
+	fig, ax0 = plt.subplots( 1, 1, figsize = _args[ 'figsize' ] )
+
+	#_args[ 'xlabel' ] = time_handler[ _args[ 'time_unit' ] ][ 'xlabel' ]
+	#time_coeff        = time_handler[ _args[ 'time_unit' ] ][ 'coeff'  ]
+
+	_ets = datetimes
+
+	if _args[ 'xlim' ] is None:
+		_args[ 'xlim' ] = [ 0, _ets[ -1 ] ]
+
+	ax0.plot( datetimes, arr, '-o', color = _args[ 'color' ],
+		linewidth = _args[ 'lw' ], ms = 5 )
+
+	ax0.grid( linestyle = 'dotted' )
+	#ax0.set_xlim( _args[ 'xlim' ] )
+	ax0.set_ylim( [ -0.5, 2.5 ] )
+	ax0.set_xlabel( _args[ 'xlabel' ] )
+	ax0.set_ylabel( r'$1=Penumbra$, $2=Umbra$')
+
+	plt.suptitle( "Eclipses" )
+	plt.tight_layout()
+
+	if _args[ 'filename' ]:
+		plt.savefig( _args[ 'filename' ], dpi = _args[ 'dpi' ] )
+		print( 'Saved', _args[ 'filename' ] )
+
+	#if _args[ 'show' ]:
+	#	plt.show()
+
+	
 
